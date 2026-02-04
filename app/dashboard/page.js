@@ -1,11 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { 
   TrendingUp, Activity, DollarSign, Users, Target, Wallet,
-  Clock, LogOut, RefreshCw, ArrowUpRight, ArrowDownRight, Zap,
-  Globe, Bell, ChevronRight
+  Clock, LogOut, RefreshCw, ArrowUpRight, Zap, Globe
 } from 'lucide-react'
 
 const portfolioHistory = [
@@ -41,26 +39,7 @@ const moltbookFunnel = [
 ]
 
 export default function Dashboard() {
-  const router = useRouter()
-  const [mounted, setMounted] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(new Date())
-
-  useEffect(() => {
-    setMounted(true)
-    if (typeof window !== 'undefined') {
-      const auth = localStorage.getItem('sygnl_auth')
-      if (!auth) router.push('/')
-    }
-  }, [router])
-
-  const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('sygnl_auth')
-    }
-    router.push('/')
-  }
-
-  if (!mounted) return <div className="min-h-screen bg-[#050505]" />
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
@@ -90,12 +69,9 @@ export default function Dashboard() {
             >
               <RefreshCw className="w-5 h-5 text-zinc-400" />
             </button>
-            <button 
-              onClick={handleLogout}
-              className="p-2 rounded-xl bg-white/5 hover:bg-red-500/10"
-            >
+            <a href="/" className="p-2 rounded-xl bg-white/5 hover:bg-red-500/10">
               <LogOut className="w-5 h-5 text-zinc-400" />
-            </button>
+            </a>
           </div>
         </div>
       </header>
