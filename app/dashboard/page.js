@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react'
 import { 
   TrendingUp, Activity, DollarSign, Users, Target, Wallet,
   Clock, LogOut, RefreshCw, ArrowUpRight, Zap, Globe, PieChart,
-  AlertTriangle, AlertCircle, CheckCircle, TrendingDown, TrendingUp as TrendingUpIcon
+  AlertTriangle, AlertCircle, CheckCircle, TrendingDown, TrendingUp as TrendingUpIcon,
+  Newspaper, BookOpen, Lightbulb, Bell
 } from 'lucide-react'
 import holdingsData from '../../data/holdings.json'
+import intelligenceData from '../../data/intelligence.json'
 
 const portfolioHistory = [
   { date: 'Jan 30', value: 100000 },
@@ -43,6 +45,7 @@ const moltbookFunnel = [
 export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [holdings, setHoldings] = useState(holdingsData)
+  const [intelligence, setIntelligence] = useState(intelligenceData)
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -294,6 +297,76 @@ export default function Dashboard() {
                           Suggested: {formatCurrency(move.suggestedSize)}
                         </div>
                       )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Intelligence & News Hub */}
+        {intelligence && intelligence.all && intelligence.all.length > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Newspaper className="w-5 h-5 text-blue-400" />
+              Intelligence Hub
+              <span className="text-xs text-zinc-500 font-normal ml-auto">
+                {intelligence.summary?.highPriority > 0 && (
+                  <span className="text-red-400">{intelligence.summary.highPriority} urgent</span>
+                )}
+              </span>
+            </h3>
+            
+            {/* Category Tabs */}
+            <div className="flex gap-2 mb-4 overflow-x-auto">
+              <button className="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 text-sm font-medium">
+                All ({intelligence.summary?.totalItems || 0})
+              </button>
+              <button className="px-3 py-1.5 rounded-lg bg-white/5 text-zinc-400 text-sm">
+                📈 Financial ({intelligence.summary?.categories?.financial || 0})
+              </button>
+              <button className="px-3 py-1.5 rounded-lg bg-white/5 text-zinc-400 text-sm">
+                🔧 OpenClaw ({intelligence.summary?.categories?.openclaw || 0})
+              </button>
+              <button className="px-3 py-1.5 rounded-lg bg-white/5 text-zinc-400 text-sm">
+                💡 Tips ({intelligence.summary?.categories?.product || 0})
+              </button>
+            </div>
+            
+            {/* News Items */}
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {intelligence.all?.slice(0, 10).map((item, idx) => {
+                const categoryConfig = {
+                  'financial': { icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+                  'openclaw': { icon: BookOpen, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+                  'product': { icon: Lightbulb, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' }
+                }[item.category] || { icon: Newspaper, color: 'text-zinc-400', bg: 'bg-white/5', border: 'border-white/10' }
+                
+                const Icon = categoryConfig.icon
+                const priorityEmoji = { 'high': '🔴', 'medium': '🟡', 'low': '🟢' }[item.priority] || '⚪'
+                
+                return (
+                  <div key={idx} className={`p-3 rounded-lg ${categoryConfig.bg} border ${categoryConfig.border}`}>
+                    <div className="flex items-start gap-3">
+                      <Icon className={`w-5 h-5 ${categoryConfig.color} mt-0.5 flex-shrink-0`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-sm">{item.title}</span>
+                          {item.priority === 'high' && (
+                            <span className="text-xs">{priorityEmoji}</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-zinc-400 leading-relaxed">{item.content}</p>
+                        <div className="mt-2 flex items-center gap-3 text-xs text-zinc-500">
+                          <span>{item.source}</span>
+                          {item.relatedSymbols && item.relatedSymbols.length > 0 && (
+                            <span className="text-zinc-400">
+                              Related: {item.relatedSymbols.join(', ')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )

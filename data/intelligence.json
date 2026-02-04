@@ -1,0 +1,328 @@
+{
+  "lastUpdated": "2026-02-04T21:06:35.627350Z",
+  "summary": {
+    "totalItems": 14,
+    "highPriority": 7,
+    "categories": {
+      "financial": 3,
+      "openclaw": 7,
+      "product": 4
+    }
+  },
+  "financial": [
+    {
+      "category": "financial",
+      "title": "Tech Stocks Under Pressure",
+      "content": "NVIDIA (NVDA) and Tesla (TSLA) experiencing volatility amid AI sector concerns and broader market rotation. NVDA down over 4% in recent sessions. Consider position sizing for volatility.",
+      "source": "Market Analysis",
+      "timestamp": "2026-02-04T21:06:35.626955",
+      "priority": "high",
+      "related_symbols": [
+        "NVDA",
+        "TSLA"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "Bitcoin Holding Key Levels",
+      "content": "BTC maintaining support around $74K despite dollar weakness. Traditional correlation breakdown suggests potential consolidation phase.",
+      "source": "Crypto Market",
+      "timestamp": "2026-02-04T21:06:35.626984",
+      "priority": "medium",
+      "related_symbols": [
+        "BTC",
+        "MSTR"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "S&P 500 (VOO) Market Fragility",
+      "content": "Market state classified as FRAGILE with 68% confidence. Reduced position sizing recommended until clarity emerges.",
+      "source": "SYGNL Analysis",
+      "timestamp": "2026-02-04T21:06:35.626998",
+      "priority": "high",
+      "related_symbols": [
+        "VOO"
+      ],
+      "action_url": null
+    }
+  ],
+  "openclaw": [
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udd27 Memory Management Tip",
+      "content": "Daily memory files (memory/YYYY-MM-DD.md) capture raw context. Curate important insights into MEMORY.md for long-term retention. Review weekly and distill learnings.",
+      "source": "OpenClaw Best Practices",
+      "timestamp": "2026-02-04T21:06:35.627315",
+      "priority": "medium",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\u26a1 Use sessions_spawn for Complex Tasks",
+      "content": "For multi-step or long-running tasks, spawn sub-agents with sessions_spawn(). They run in isolation and report back. Prevents context bloat in main session.",
+      "source": "OpenClaw Best Practices",
+      "timestamp": "2026-02-04T21:06:35.627321",
+      "priority": "high",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udcca Session Status Monitoring",
+      "content": "Use /status to check model usage, costs, and session health. Helps track API consumption and optimize efficiency.",
+      "source": "OpenClaw Best Practices",
+      "timestamp": "2026-02-04T21:06:35.627323",
+      "priority": "low",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udd12 Security Reminder",
+      "content": "Sensitive data (API keys, passwords) stored in TOOLS.md or AGENTS.md. Never commit credentials to shared repositories. Use environment variables for deployment.",
+      "source": "OpenClaw Security",
+      "timestamp": "2026-02-04T21:06:35.627325",
+      "priority": "high",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83c\udd95 New Skills Available",
+      "content": "Check clawhub.com for new community skills. Recently added: weather, moltbook, bluebubbles. Skills provide specialized tooling for common tasks.",
+      "source": "OpenClaw Updates",
+      "timestamp": "2026-02-04T21:06:35.627328",
+      "priority": "medium",
+      "related_symbols": [],
+      "action_url": "https://clawhub.com"
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udcf1 Mobile Canvas Support",
+      "content": "Canvas can now render UIs for mobile testing. Use canvas.snapshot() to capture mobile screens during development.",
+      "source": "OpenClaw Updates",
+      "timestamp": "2026-02-04T21:06:35.627330",
+      "priority": "low",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udd04 Gateway Auto-Update",
+      "content": "Gateway can self-update via gateway.update.run(). Only use when explicitly requested. Config changes via gateway.config.patch() for safe updates.",
+      "source": "OpenClaw Updates",
+      "timestamp": "2026-02-04T21:06:35.627332",
+      "priority": "medium",
+      "related_symbols": [],
+      "action_url": null
+    }
+  ],
+  "recommendations": [
+    {
+      "category": "product",
+      "title": "\ud83d\udcc8 Consider TradingView Integration",
+      "content": "For SYGNL dashboard enhancement: TradingView widgets provide real-time charts. Lightweight embeddable widgets for BTC, NVDA, TSLA tracking.",
+      "source": "Product Recommendations",
+      "timestamp": "2026-02-04T21:06:35.627335",
+      "priority": "medium",
+      "related_symbols": [
+        "NVDA",
+        "TSLA",
+        "BTC"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "product",
+      "title": "\ud83d\udd14 Set Up Alert System",
+      "content": "Consider cron jobs for price alerts. Use cron.add() to schedule checks every 15-30 minutes during market hours. Alert on allocation drift >5%.",
+      "source": "Product Recommendations",
+      "timestamp": "2026-02-04T21:06:35.627338",
+      "priority": "high",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "product",
+      "title": "\u2601\ufe0f Deploy SYGNL API to OVH",
+      "content": "API is production-ready. Deploy to OVH Cloud VPS for 24/7 availability. Use PM2 or systemd for process management. SSL via LetsEncrypt.",
+      "source": "Product Recommendations",
+      "timestamp": "2026-02-04T21:06:35.627340",
+      "priority": "high",
+      "related_symbols": [],
+      "action_url": "https://www.ovh.com"
+    },
+    {
+      "category": "product",
+      "title": "\ud83d\udcca Portfolio Rebalancing Alerts",
+      "content": "Crypto allocation at 64.5%, approaching 70% limit. Set up automated alerts when allocation drifts >5% from target 60%.",
+      "source": "SYGNL Recommendations",
+      "timestamp": "2026-02-04T21:06:35.627342",
+      "priority": "high",
+      "related_symbols": [
+        "BTC"
+      ],
+      "action_url": null
+    }
+  ],
+  "all": [
+    {
+      "category": "financial",
+      "title": "Tech Stocks Under Pressure",
+      "content": "NVIDIA (NVDA) and Tesla (TSLA) experiencing volatility amid AI sector concerns and broader market rotation. NVDA down over 4% in recent sessions. Consider position sizing for volatility.",
+      "source": "Market Analysis",
+      "timestamp": "2026-02-04T21:06:35.626955",
+      "priority": "high",
+      "related_symbols": [
+        "NVDA",
+        "TSLA"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "S&P 500 (VOO) Market Fragility",
+      "content": "Market state classified as FRAGILE with 68% confidence. Reduced position sizing recommended until clarity emerges.",
+      "source": "SYGNL Analysis",
+      "timestamp": "2026-02-04T21:06:35.626998",
+      "priority": "high",
+      "related_symbols": [
+        "VOO"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\u26a1 Use sessions_spawn for Complex Tasks",
+      "content": "For multi-step or long-running tasks, spawn sub-agents with sessions_spawn(). They run in isolation and report back. Prevents context bloat in main session.",
+      "source": "OpenClaw Best Practices",
+      "timestamp": "2026-02-04T21:06:35.627321",
+      "priority": "high",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udd12 Security Reminder",
+      "content": "Sensitive data (API keys, passwords) stored in TOOLS.md or AGENTS.md. Never commit credentials to shared repositories. Use environment variables for deployment.",
+      "source": "OpenClaw Security",
+      "timestamp": "2026-02-04T21:06:35.627325",
+      "priority": "high",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "product",
+      "title": "\ud83d\udd14 Set Up Alert System",
+      "content": "Consider cron jobs for price alerts. Use cron.add() to schedule checks every 15-30 minutes during market hours. Alert on allocation drift >5%.",
+      "source": "Product Recommendations",
+      "timestamp": "2026-02-04T21:06:35.627338",
+      "priority": "high",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "product",
+      "title": "\u2601\ufe0f Deploy SYGNL API to OVH",
+      "content": "API is production-ready. Deploy to OVH Cloud VPS for 24/7 availability. Use PM2 or systemd for process management. SSL via LetsEncrypt.",
+      "source": "Product Recommendations",
+      "timestamp": "2026-02-04T21:06:35.627340",
+      "priority": "high",
+      "related_symbols": [],
+      "action_url": "https://www.ovh.com"
+    },
+    {
+      "category": "product",
+      "title": "\ud83d\udcca Portfolio Rebalancing Alerts",
+      "content": "Crypto allocation at 64.5%, approaching 70% limit. Set up automated alerts when allocation drifts >5% from target 60%.",
+      "source": "SYGNL Recommendations",
+      "timestamp": "2026-02-04T21:06:35.627342",
+      "priority": "high",
+      "related_symbols": [
+        "BTC"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "Bitcoin Holding Key Levels",
+      "content": "BTC maintaining support around $74K despite dollar weakness. Traditional correlation breakdown suggests potential consolidation phase.",
+      "source": "Crypto Market",
+      "timestamp": "2026-02-04T21:06:35.626984",
+      "priority": "medium",
+      "related_symbols": [
+        "BTC",
+        "MSTR"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udd27 Memory Management Tip",
+      "content": "Daily memory files (memory/YYYY-MM-DD.md) capture raw context. Curate important insights into MEMORY.md for long-term retention. Review weekly and distill learnings.",
+      "source": "OpenClaw Best Practices",
+      "timestamp": "2026-02-04T21:06:35.627315",
+      "priority": "medium",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83c\udd95 New Skills Available",
+      "content": "Check clawhub.com for new community skills. Recently added: weather, moltbook, bluebubbles. Skills provide specialized tooling for common tasks.",
+      "source": "OpenClaw Updates",
+      "timestamp": "2026-02-04T21:06:35.627328",
+      "priority": "medium",
+      "related_symbols": [],
+      "action_url": "https://clawhub.com"
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udd04 Gateway Auto-Update",
+      "content": "Gateway can self-update via gateway.update.run(). Only use when explicitly requested. Config changes via gateway.config.patch() for safe updates.",
+      "source": "OpenClaw Updates",
+      "timestamp": "2026-02-04T21:06:35.627332",
+      "priority": "medium",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "product",
+      "title": "\ud83d\udcc8 Consider TradingView Integration",
+      "content": "For SYGNL dashboard enhancement: TradingView widgets provide real-time charts. Lightweight embeddable widgets for BTC, NVDA, TSLA tracking.",
+      "source": "Product Recommendations",
+      "timestamp": "2026-02-04T21:06:35.627335",
+      "priority": "medium",
+      "related_symbols": [
+        "NVDA",
+        "TSLA",
+        "BTC"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udcca Session Status Monitoring",
+      "content": "Use /status to check model usage, costs, and session health. Helps track API consumption and optimize efficiency.",
+      "source": "OpenClaw Best Practices",
+      "timestamp": "2026-02-04T21:06:35.627323",
+      "priority": "low",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udcf1 Mobile Canvas Support",
+      "content": "Canvas can now render UIs for mobile testing. Use canvas.snapshot() to capture mobile screens during development.",
+      "source": "OpenClaw Updates",
+      "timestamp": "2026-02-04T21:06:35.627330",
+      "priority": "low",
+      "related_symbols": [],
+      "action_url": null
+    }
+  ]
+}
