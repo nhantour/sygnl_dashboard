@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   TrendingUp, Activity, DollarSign, Users, Target, Wallet,
-  Clock, LogOut, RefreshCw, ArrowUpRight, Zap, Globe
+  Clock, LogOut, RefreshCw, ArrowUpRight, Zap, Globe, PieChart
 } from 'lucide-react'
+import holdingsData from '../../data/holdings.json'
 
 const portfolioHistory = [
   { date: 'Jan 30', value: 100000 },
@@ -40,6 +41,16 @@ const moltbookFunnel = [
 
 export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(new Date())
+  const [holdings, setHoldings] = useState(holdingsData)
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value)
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
@@ -83,12 +94,11 @@ export default function Dashboard() {
           <div className="p-4 rounded-xl bg-white/5 border border-white/10">
             <div className="flex items-center gap-2 mb-2">
               <Wallet className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs text-zinc-500">Portfolio</span>
+              <span className="text-xs text-zinc-500">Live Portfolio</span>
             </div>
-            <div className="text-xl font-bold">$100,891</div>
-            <div className="flex items-center gap-1 text-xs text-emerald-400">
-              <ArrowUpRight className="w-3 h-3" />
-              +0.89%
+            <div className="text-xl font-bold">{formatCurrency(holdings.totalValue)}</div>
+            <div className="flex items-center gap-1 text-xs text-zinc-500">
+              {holdings.holdings.length} positions
             </div>
           </div>
 
@@ -174,6 +184,48 @@ export default function Dashboard() {
                 <div className="mt-2 text-xs text-zinc-600">Due: {obj.deadline}</div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Live Holdings */}
+        <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <PieChart className="w-5 h-5 text-emerald-400" />
+            Live Holdings
+            <span className="text-xs text-zinc-500 font-normal ml-auto">
+              Updated: {new Date(holdings.lastUpdated).toLocaleString()}
+            </span>
+          </h3>
+          <div className="space-y-2">
+            {holdings.holdings.map((holding) => (
+              <div key={holding.symbol} className="flex items-center justify-between p-3 rounded-lg bg-black/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-600/20 flex items-center justify-center font-bold text-emerald-400 text-sm">
+                    {holding.symbol.slice(0, 2)}
+                  </div>
+                  <div>
+                    <div className="font-medium">{holding.symbol}</div>
+                    <div className="text-xs text-zinc-500">{holding.name}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <div className="font-medium">{formatCurrency(holding.value)}</div>
+                    <div className="text-xs text-zinc-500">{holding.allocation.toFixed(1)}%</div>
+                  </div>
+                  <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
+                      style={{ width: `${holding.allocation}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 pt-4 border-t border-white/10 flex justify-between text-sm">
+            <span className="text-zinc-500">Total: <span className="text-white font-semibold">{formatCurrency(holdings.totalValue)}</span></span>
+            <span className="text-zinc-500">Positions: <span className="text-white">{holdings.holdings.length}</span></span>
           </div>
         </div>
 

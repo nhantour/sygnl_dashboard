@@ -1,0 +1,47 @@
+{
+  "lastUpdated": "2026-02-04T20:52:00Z",
+  "totalValue": 62678.20,
+  "dayChange": 0,
+  "dayChangePercent": 0,
+  "holdings": [
+    {
+      "symbol": "VOO",
+      "name": "Vanguard S&P 500 ETF",
+      "value": 20485.26,
+      "allocation": 32.69,
+      "type": "ETF"
+    },
+    {
+      "symbol": "TSLA",
+      "name": "Tesla Inc.",
+      "value": 18056.60,
+      "allocation": 28.81,
+      "type": "Equity"
+    },
+    {
+      "symbol": "NVDA",
+      "name": "NVIDIA Corporation",
+      "value": 17540.55,
+      "allocation": 27.98,
+      "type": "Equity"
+    },
+    {
+      "symbol": "PLTR",
+      "name": "Palantir Technologies",
+      "value": 5977.16,
+      "allocation": 9.54,
+      "type": "Equity"
+    },
+    {
+      "symbol": "MSTR",
+      "name": "MicroStrategy Inc.",
+      "value": 618.63,
+      "allocation": 0.99,
+      "type": "Equity"
+    }
+  ],
+  "allocationTargets": {
+    "ETF": 35,
+    "Equity": 65
+  }
+}
