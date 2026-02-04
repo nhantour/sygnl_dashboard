@@ -1,0 +1,23 @@
+#!/bin/bash
+# Deploy directly to Vercel using CLI
+
+echo "🚀 SYGNL Dashboard - Vercel CLI Deploy"
+echo "======================================"
+echo ""
+echo "This script will deploy the dashboard directly to Vercel"
+echo "without requiring GitHub."
+echo ""
+echo "Prerequisites:"
+echo "1. Install Vercel CLI: npm i -g vercel"
+echo "2. Login: vercel login"
+echo ""
+echo "Then run:"
+echo "  cd /home/ubuntu/.openclaw/workspace/sygnl-dashboard"
+echo "  vercel --prod"
+echo ""
+echo "Or use the deploy script I prepared:"
+echo "  ./deploy-vercel-cli.sh"
+echo ""
+echo "Environment variables to set in Vercel dashboard:"
+echo "  ALPACA_API_KEY=PKMP5VADWPMYNGKPZUIZPZTFAX"
+echo "  ALPACA_SECRET_KEY=CWEhv5aS2sT85e4kL3uzyxuijhneeGGNJxF6qyjDzf2k"
