@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { 
   TrendingUp, Activity, DollarSign, Users, Target, Wallet,
-  Clock, LogOut, RefreshCw, ArrowUpRight, Zap, Globe, PieChart
+  Clock, LogOut, RefreshCw, ArrowUpRight, Zap, Globe, PieChart,
+  AlertTriangle, AlertCircle, CheckCircle, TrendingDown, TrendingUp as TrendingUpIcon
 } from 'lucide-react'
 import holdingsData from '../../data/holdings.json'
 
@@ -221,8 +222,8 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center gap-6">
                   <div className="text-right">
-                    <div className="font-medium">{formatCurrency(holding.value)}</div>
-                    <div className="text-xs text-zinc-500">{holding.allocation.toFixed(1)}%</div>
+                    <div className="font-medium">{formatCurrency(holding.value || 0)}</div>
+                    <div className="text-xs text-zinc-500">{(holding.allocation || 0).toFixed(1)}%</div>
                   </div>
                   <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
                     <div 
@@ -231,7 +232,7 @@ export default function Dashboard() {
                           ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
                           : 'bg-gradient-to-r from-emerald-500 to-teal-500'
                       }`}
-                      style={{ width: `${holding.allocation}%` }}
+                      style={{ width: `${holding.allocation || 0}%` }}
                     />
                   </div>
                 </div>
@@ -244,6 +245,62 @@ export default function Dashboard() {
             <span className="text-zinc-500">Positions: <span className="text-white">{holdings.holdings.length}</span></span>
           </div>
         </div>
+
+        {/* Move Considerations */}
+        {holdings.moveConsiderations && holdings.moveConsiderations.length > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-400" />
+              SYGNL Move Considerations
+              <span className="text-xs text-zinc-500 font-normal ml-auto">
+                Based on signals & allocation
+              </span>
+            </h3>
+            <div className="space-y-2">
+              {holdings.moveConsiderations.map((move, idx) => {
+                const urgencyConfig = {
+                  'HIGH': { color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', icon: AlertCircle },
+                  'MEDIUM': { color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', icon: AlertTriangle },
+                  'LOW': { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: CheckCircle }
+                }[move.urgency] || urgencyConfig['LOW']
+                const Icon = urgencyConfig.icon
+                const actionColors = {
+                  'ADD': 'text-emerald-400',
+                  'REDUCE': 'text-red-400',
+                  'HOLD': 'text-blue-400',
+                  'WATCH': 'text-yellow-400'
+                }
+                return (
+                  <div key={idx} className={`flex items-start gap-3 p-3 rounded-lg ${urgencyConfig.bg} border ${urgencyConfig.border}`}>
+                    <Icon className={`w-5 h-5 ${urgencyConfig.color} mt-0.5 flex-shrink-0`} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold">{move.symbol}</span>
+                        <span className={`text-sm font-medium ${actionColors[move.action] || 'text-zinc-400'}`}>
+                          {move.action}
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded ${urgencyConfig.bg} ${urgencyConfig.color}`}>
+                          {move.urgency}
+                        </span>
+                      </div>
+                      <p className="text-sm text-zinc-400">{move.reasoning}</p>
+                      {move.signalConfidence && (
+                        <div className="mt-1 text-xs text-zinc-500">
+                          Signal: {move.signalAction} ({move.signalConfidence}% conf)
+                        </div>
+                      )}
+                      {move.suggestedSize && (
+                        <div className="mt-1 text-xs text-emerald-400">
+                          Suggested: {formatCurrency(move.suggestedSize)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

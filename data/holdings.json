@@ -1,78 +1,111 @@
 {
-  "lastUpdated": "2026-02-04T20:54:00Z",
+  "lastUpdated": "2026-02-04T21:03:16.439291Z",
   "btcPrice": 74097,
-  "totalValue": 176350.40,
-  "dayChange": 0,
-  "dayChangePercent": 0,
+  "totalValue": 189299.22,
+  "dayChange": -8959.75,
+  "dayChangePercent": -4.73,
   "holdings": [
     {
       "symbol": "BTC",
       "name": "Bitcoin (Ledger)",
+      "wallet": "Ledger",
       "quantity": 1.16398,
-      "value": 86247.67,
-      "allocation": 48.91,
-      "type": "Crypto",
-      "wallet": "Ledger"
-    },
-    {
-      "symbol": "VOO",
-      "name": "Vanguard S&P 500 ETF",
-      "quantity": null,
-      "value": 20485.26,
-      "allocation": 11.62,
-      "type": "ETF",
-      "wallet": null
+      "current_price": 73426,
+      "current_value": 85466.39548,
+      "day_change": -3339.709990524811,
+      "day_change_pct": -3.907629392544508,
+      "allocation_pct": 45.39569159561454,
+      "type": "Crypto"
     },
     {
       "symbol": "BTC",
       "name": "Bitcoin (Uphold)",
+      "wallet": "Uphold",
       "quantity": 0.37012,
-      "value": 27424.78,
-      "allocation": 15.55,
-      "type": "Crypto",
-      "wallet": "Uphold"
-    },
-    {
-      "symbol": "TSLA",
-      "name": "Tesla Inc.",
-      "quantity": null,
-      "value": 18056.60,
-      "allocation": 10.24,
-      "type": "Equity",
-      "wallet": null
-    },
-    {
-      "symbol": "NVDA",
-      "name": "NVIDIA Corporation",
-      "quantity": null,
-      "value": 17540.55,
-      "allocation": 9.95,
-      "type": "Equity",
-      "wallet": null
+      "current_price": 73426,
+      "current_value": 27176.43112,
+      "day_change": -1061.9542102897326,
+      "day_change_pct": -3.907629392544508,
+      "allocation_pct": 14.434829957017175,
+      "type": "Crypto"
     },
     {
       "symbol": "PLTR",
-      "name": "Palantir Technologies",
-      "quantity": null,
-      "value": 5977.16,
-      "allocation": 3.39,
-      "type": "Equity",
-      "wallet": null
+      "name": "PLTR",
+      "wallet": null,
+      "quantity": 186,
+      "current_price": 139.54,
+      "current_value": 25954.44,
+      "day_change": -3411.2400000000007,
+      "day_change_pct": -11.616417532303018,
+      "allocation_pct": 13.785766290478424,
+      "type": "Equity"
+    },
+    {
+      "symbol": "VOO",
+      "name": "VOO",
+      "wallet": null,
+      "quantity": 36,
+      "current_price": 630.94,
+      "current_value": 22713.840000000004,
+      "day_change": -115.55999999999722,
+      "day_change_pct": -0.5061893873689068,
+      "allocation_pct": 12.064513424266543,
+      "type": "ETF"
+    },
+    {
+      "symbol": "TSLA",
+      "name": "TSLA",
+      "wallet": null,
+      "quantity": 50,
+      "current_price": 406.01,
+      "current_value": 20300.5,
+      "day_change": -797.4999999999994,
+      "day_change_pct": -3.779979144942646,
+      "allocation_pct": 10.782661794277097,
+      "type": "Equity"
+    },
+    {
+      "symbol": "NVDA",
+      "name": "NVDA",
+      "wallet": null,
+      "quantity": 36,
+      "current_price": 174.1934,
+      "current_value": 6270.9624,
+      "day_change": -221.27760000000023,
+      "day_change_pct": -3.408339802595102,
+      "allocation_pct": 3.330837500742751,
+      "type": "Equity"
     },
     {
       "symbol": "MSTR",
-      "name": "MicroStrategy Inc.",
-      "quantity": null,
-      "value": 618.63,
-      "allocation": 0.35,
-      "type": "Equity",
-      "wallet": null
+      "name": "MSTR",
+      "wallet": null,
+      "quantity": 3,
+      "current_price": 129.09,
+      "current_value": 387.27,
+      "day_change": -12.509999999999962,
+      "day_change_pct": -3.129221071589365,
+      "allocation_pct": 0.2056994376034921,
+      "type": "Equity"
     }
   ],
   "allocationByType": {
-    "Crypto": 113672.45,
-    "Equity": 42192.94,
-    "ETF": 20485.26
+    "Crypto": 112642.8266,
+    "Equity": 52913.1724,
+    "ETF": 22713.840000000004
   },
-  "btcTotal": 1.5341
+  "btcTotal": 1.5341,
+  "moveConsiderations": [
+    {
+      "symbol": "NVDA",
+      "action": "ADD",
+      "currentAllocation": 3.31,
+      "signalConfidence": 74,
+      "signalAction": "BUY",
+      "reasoning": "Strong BUY signal (74% conf) on NVDA. Currently 3.3% allocation - consider adding.",
+      "urgency": "HIGH",
+      "suggestedSize": 9464.96
+    }
+  ]
 }
