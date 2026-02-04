@@ -197,15 +197,26 @@ export default function Dashboard() {
             </span>
           </h3>
           <div className="space-y-2">
-            {holdings.holdings.map((holding) => (
-              <div key={holding.symbol} className="flex items-center justify-between p-3 rounded-lg bg-black/30">
+            {holdings.holdings.map((holding, idx) => (
+              <div key={`${holding.symbol}-${idx}`} className="flex items-center justify-between p-3 rounded-lg bg-black/30">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-600/20 flex items-center justify-center font-bold text-emerald-400 text-sm">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${
+                    holding.type === 'Crypto' 
+                      ? 'bg-gradient-to-br from-orange-500/20 to-yellow-600/20 text-orange-400'
+                      : 'bg-gradient-to-br from-emerald-500/20 to-teal-600/20 text-emerald-400'
+                  }`}>
                     {holding.symbol.slice(0, 2)}
                   </div>
                   <div>
                     <div className="font-medium">{holding.symbol}</div>
-                    <div className="text-xs text-zinc-500">{holding.name}</div>
+                    <div className="text-xs text-zinc-500">
+                      {holding.name}
+                      {holding.quantity && (
+                        <span className="ml-2 text-zinc-400">
+                          {holding.quantity.toFixed(5)} {holding.symbol}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-6">
@@ -215,7 +226,11 @@ export default function Dashboard() {
                   </div>
                   <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
+                      className={`h-full rounded-full ${
+                        holding.type === 'Crypto'
+                          ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
+                          : 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                      }`}
                       style={{ width: `${holding.allocation}%` }}
                     />
                   </div>
@@ -225,6 +240,7 @@ export default function Dashboard() {
           </div>
           <div className="mt-4 pt-4 border-t border-white/10 flex justify-between text-sm">
             <span className="text-zinc-500">Total: <span className="text-white font-semibold">{formatCurrency(holdings.totalValue)}</span></span>
+            <span className="text-zinc-500">BTC: <span className="text-orange-400 font-semibold">{holdings.btcTotal?.toFixed(5)}</span></span>
             <span className="text-zinc-500">Positions: <span className="text-white">{holdings.holdings.length}</span></span>
           </div>
         </div>
