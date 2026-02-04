@@ -1,0 +1,8 @@
+[
+  { "date": "2026-01-30", "cost": 2.10, "description": "API calls, sub-agent spawn" },
+  { "date": "2026-01-31", "cost": 2.45, "description": "GPT export analysis" },
+  { "date": "2026-02-01", "cost": 1.89, "description": "Browser automation" },
+  { "date": "2026-02-02", "cost": 3.20, "description": "Codebase audit (84K tokens)" },
+  { "date": "2026-02-03", "cost": 1.75, "description": "Briefing generation" },
+  { "date": "2026-02-04", "cost": 2.15, "description": "Moltbook deployment" }
+]
