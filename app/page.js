@@ -15,13 +15,26 @@ export default function Login() {
     setLoading(true)
     setError('')
 
+    // Demo access - delayed data, read-only
     if (password === 'sygnl2026') {
       localStorage.setItem('sygnl_auth', 'true')
+      localStorage.setItem('sygnl_mode', 'demo')
+      localStorage.setItem('sygnl_access_level', 'read-only')
       router.push('/dashboard')
-    } else {
-      setError('Invalid credentials')
-      setLoading(false)
+      return
     }
+
+    // Real access - live data, full features
+    if (password === 'trymysignal') {
+      localStorage.setItem('sygnl_auth', 'true')
+      localStorage.setItem('sygnl_mode', 'live')
+      localStorage.setItem('sygnl_access_level', 'full')
+      router.push('/dashboard')
+      return
+    }
+
+    setError('Invalid credentials')
+    setLoading(false)
   }
 
   return (
@@ -63,7 +76,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-2">
-                Password
+                Access Code
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />

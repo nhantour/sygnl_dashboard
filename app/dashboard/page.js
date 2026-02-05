@@ -48,6 +48,16 @@ export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [holdings, setHoldings] = useState(holdingsData)
   const [intelligence, setIntelligence] = useState(intelligenceData)
+  const [demoMode, setDemoMode] = useState(false)
+  const [accessLevel, setAccessLevel] = useState('')
+  
+  // Check access mode on mount
+  useEffect(() => {
+    const mode = localStorage.getItem('sygnl_mode')
+    const level = localStorage.getItem('sygnl_access_level')
+    setDemoMode(mode === 'demo')
+    setAccessLevel(level || 'unknown')
+  }, [])
   const [performance, setPerformance] = useState(performanceData)
   const [activeTab, setActiveTab] = useState('all')
   
@@ -176,6 +186,37 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
+
+      {/* Demo Mode Banner */}
+      {demoMode && (
+        <div className="relative z-40 bg-yellow-500/10 border-y border-yellow-500/20">
+          <div className="max-w-[1600px] mx-auto px-6 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-yellow-400">
+              <AlertTriangle className="w-4 h-4" />
+              <span><strong>Demo Mode:</strong> Viewing delayed data (24h). Upgrade to Pro for real-time signals.</span>
+            </div>
+            <a 
+              href="mailto:upgrade@sygnl.ai" 
+              className="px-3 py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 text-xs font-medium transition-colors"
+            >
+              Upgrade to Pro
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Live Mode Badge */}
+      {!demoMode && accessLevel === 'full' && (
+        <div className="relative z-40 bg-emerald-500/10 border-y border-emerald-500/20">
+          <div className="max-w-[1600px] mx-auto px-6 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-emerald-400">
+              <CheckCircle className="w-4 h-4" />
+              <span><strong>Live Mode:</strong> Real-time data and signals. Full access enabled.</span>
+            </div>
+            <span className="text-xs text-emerald-500/60">Validated User</span>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="relative z-10 max-w-[1600px] mx-auto px-6 py-6">
