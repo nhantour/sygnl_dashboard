@@ -5,7 +5,7 @@ import {
   TrendingUp, Activity, DollarSign, Users, Target, Wallet,
   Clock, LogOut, RefreshCw, ArrowUpRight, Zap, Globe, PieChart,
   AlertTriangle, AlertCircle, CheckCircle, TrendingDown, TrendingUp as TrendingUpIcon,
-  Newspaper, BookOpen, Lightbulb, Bell
+  Newspaper, BookOpen, Lightbulb, Bell, MessageCircle, Send, X
 } from 'lucide-react'
 import holdingsData from '../../data/holdings.json'
 import intelligenceData from '../../data/intelligence.json'
@@ -50,6 +50,14 @@ export default function Dashboard() {
   const [intelligence, setIntelligence] = useState(intelligenceData)
   const [performance, setPerformance] = useState(performanceData)
   const [activeTab, setActiveTab] = useState('all')
+  
+  // Chat state
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatMessages, setChatMessages] = useState([
+    { role: 'assistant', content: 'Hello! I\'m SYGNL Assistant. Ask me about your portfolio, signals, or how the system works!', timestamp: new Date().toISOString() }
+  ])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -58,6 +66,63 @@ export default function Dashboard() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value)
+  }
+
+  // Chat handler
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return
+    
+    const userMessage = chatInput.trim()
+    setChatInput('')
+    setChatLoading(true)
+    
+    // Add user message
+    setChatMessages(prev => [...prev, {
+      role: 'user',
+      content: userMessage,
+      timestamp: new Date().toISOString()
+    }])
+    
+    // Simulate assistant response (in production, this would call the API)
+    setTimeout(() => {
+      let response = ''
+      const msg = userMessage.toLowerCase()
+      
+      if (msg.includes('portfolio') || msg.includes('holdings') || msg.includes('doing')) {
+        response = `📊 Your Portfolio Summary:\n\n**Total Value:** ${formatCurrency(holdings.totalValue || 0)}\n**Day Change:** ${formatCurrency(holdings.dayChange || 0)} (${(holdings.dayChangePercent || 0).toFixed(2)}%)\n\n**Top Holdings:**\n${holdings.holdings?.slice(0, 5).map(h => `• ${h.symbol}: ${formatCurrency(h.current_value || h.value || 0)} (${(h.allocation_pct || h.allocation || 0).toFixed(1)}%)`).join('\n') || 'No holdings data'}\n\nCheck the Live Holdings section for detailed analysis.`
+      } else if (msg.includes('buy') || msg.includes('should i buy')) {
+        const buyMoves = holdings.moveConsiderations?.filter(m => m.action === 'BUY' || m.action === 'ADD') || []
+        if (buyMoves.length > 0) {
+          response = `🟢 **Buy Recommendations:**\n\n${buyMoves.slice(0, 3).map(m => `**${m.symbol}** - ${m.action}\n${m.signalConfidence ? `Confidence: ${m.signalConfidence}%\n` : ''}${m.reasoning?.substring(0, 100) || ''}...`).join('\n\n')}`
+        } else {
+          response = "🟡 No strong BUY signals currently. Check the Intelligence Hub for latest signals or wait for new opportunities."
+        }
+      } else if (msg.includes('sell') || msg.includes('reduce')) {
+        const sellMoves = holdings.moveConsiderations?.filter(m => m.action === 'SELL' || m.action === 'REDUCE') || []
+        if (sellMoves.length > 0) {
+          response = `🔴 **Reduce/Sell Recommendations:**\n\n${sellMoves.slice(0, 3).map(m => `**${m.symbol}** - ${m.action}\nPriority: ${m.urgency}\n${m.reasoning?.substring(0, 100) || ''}...`).join('\n\n')}`
+        } else {
+          response = "✅ No SELL or REDUCE signals currently. Your positions look good - hold and monitor."
+        }
+      } else if (msg.includes('what is sygnl') || msg.includes('how does it work')) {
+        response = "🧠 **What is SYGNL?**\n\nSYGNL is an AI-powered trading signal system that generates BUY/SELL/HOLD signals based on:\n\n• Technical analysis (RSI, MACD, moving averages)\n• Market state classification (Clear, Building, Fragile, Chaos)\n• Machine learning models\n• Confidence scoring (0-100%)\n\nThe dashboard shows your portfolio and SYGNL's recommendations. Paper trading tests signals without real money."
+      } else if (msg.includes('accuracy') || msg.includes('performance')) {
+        response = `📈 **Performance:**\n\nTarget: 65%+ accuracy on 75%+ confidence signals.\n\nCurrent tracking shows:\n• Live Portfolio: Tracking real holdings\n• Paper Trading: Testing signal accuracy\n\nCheck the Performance Metrics section for detailed stats comparing Live vs Paper returns.`
+      } else if (msg.includes('buy mean') || msg.includes('add mean') || msg.includes('difference')) {
+        response = "📖 **Action Meanings:**\n\n• **BUY** = Open NEW position (don't own it yet)\n• **ADD** = Increase existing position (you own it, buy more)\n• **HOLD** = Maintain current position\n• **REDUCE** = Sell part of position\n• **WATCH** = Monitor, no action yet\n\nCheck Move Considerations for specific recommendations on your holdings."
+      } else if (msg.includes('confidence')) {
+        response = "🎯 **Confidence Scores:**\n\n• **80-100%**: Very high confidence, strong signal\n• **65-79%**: Good confidence, valid signal\n• **50-64%**: Moderate confidence, use caution\n• **Below 50%**: Low confidence, probably skip\n\nAuto-trader requires 65%+ confidence to execute. Higher confidence = more reliable signal."
+      } else {
+        response = "🤔 I can help you with:\n\n• Your portfolio status\n• Buy/sell recommendations\n• How SYGNL works\n• Signal accuracy\n• What actions mean\n\nTry asking: 'How is my portfolio?' or 'What should I buy?'"
+      }
+      
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: response,
+        timestamp: new Date().toISOString()
+      }])
+      setChatLoading(false)
+    }, 1000)
   }
 
   return (
@@ -845,6 +910,105 @@ export default function Dashboard() {
           </div>
           <p className="mt-2">SYGNL α — Market Intelligence for Trading Agents</p>
         </footer>
+
+        {/* ASK SYGNL Chat Widget */}
+        <div className="fixed bottom-4 right-4 z-50">
+          {!chatOpen ? (
+            <button
+              onClick={() => setChatOpen(true)}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span className="font-medium">ASK SYGNL</span>
+            </button>
+          ) : (
+            <div className="w-80 sm:w-96 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden">
+              {/* Chat Header */}
+              <div className="p-3 bg-gradient-to-r from-emerald-500/20 to-teal-600/20 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <span className="font-semibold text-sm">SYGNL Assistant</span>
+                    <div className="text-xs text-zinc-500">Ask about your portfolio</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setChatOpen(false)}
+                  className="p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="h-80 overflow-y-auto p-3 space-y-3">
+                {chatMessages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] p-3 rounded-xl text-sm ${
+                        msg.role === 'user'
+                          ? 'bg-emerald-500/20 text-emerald-100 rounded-br-none'
+                          : 'bg-white/5 text-zinc-300 rounded-bl-none'
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                    </div>
+                  </div>
+                ))}
+                {chatLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-white/5 p-3 rounded-xl rounded-bl-none">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce delay-100" />
+                        <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce delay-200" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Input */}
+              <div className="p-3 border-t border-white/10">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Ask about your portfolio..."
+                    className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={chatLoading || !chatInput.trim()}
+                    className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="mt-2 flex gap-1 flex-wrap">
+                  {['How is my portfolio?', 'What should I buy?', 'How accurate are signals?', 'What does BUY mean?'].map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => {
+                        setChatInput(suggestion)
+                      }}
+                      className="text-xs px-2 py-1 rounded-full bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-zinc-300 transition-colors"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   )
