@@ -178,64 +178,119 @@ export default function Dashboard() {
           <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <TrendingUpIcon className="w-5 h-5 text-emerald-400" />
-              Performance Metrics
+              Performance Comparison
               <span className="text-xs text-zinc-500 font-normal ml-auto">
-                Track gains/losses over time
+                Live vs Paper Trading
               </span>
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Live Portfolio Performance */}
-              {performance.performanceMetrics.live && (
-                <div className="p-4 rounded-lg bg-black/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-zinc-400">Live Portfolio</span>
-                    <span className="text-xs text-zinc-600">Since Feb 1, 2026</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {Object.entries(performance.performanceMetrics.live).map(([period, data]) => (
-                      <div key={period} className="text-center p-2 rounded bg-white/5">
-                        <div className="text-xs text-zinc-500 mb-1">{data.label}</div>
-                        <div className={`text-lg font-bold ${data.return >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {data.return >= 0 ? '+' : ''}{data.return.toFixed(2)}%
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {performance.allTimeStats?.live && (
-                    <div className="mt-3 pt-3 border-t border-white/10 flex justify-between text-xs text-zinc-500">
-                      <span>Best Day: <span className="text-emerald-400">{performance.allTimeStats.live.bestDay?.return?.toFixed(2)}%</span></span>
-                      <span>Worst Day: <span className="text-red-400">{performance.allTimeStats.live.worstDay?.return?.toFixed(2)}%</span></span>
-                      <span>Win Rate: <span className="text-zinc-300">{performance.allTimeStats.live.winningDays}/{performance.allTimeStats.live.winningDays + performance.allTimeStats.live.losingDays} days</span></span>
+            {/* Side-by-Side Comparison Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-xs text-zinc-500 border-b border-white/10">
+                    <th className="text-left py-2 px-3">Period</th>
+                    <th className="text-center py-2 px-3">
+                      <span className="flex items-center justify-center gap-2">
+                        <Wallet className="w-3 h-3 text-emerald-400" />
+                        Live Portfolio
+                      </span>
+                    </th>
+                    <th className="text-center py-2 px-3">
+                      <span className="flex items-center justify-center gap-2">
+                        <Target className="w-3 h-3 text-purple-400" />
+                        Paper Trading
+                      </span>
+                    </th>
+                    <th className="text-center py-2 px-3">Difference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {['daily', 'weekly', 'monthly', 'ytd'].map((period) => {
+                    const liveData = performance.performanceMetrics?.live?.[period]
+                    const paperData = performance.performanceMetrics?.paper?.[period]
+                    const diff = liveData && paperData ? liveData.return - paperData.return : 0
+                    
+                    return (
+                      <tr key={period} className="border-b border-white/5 last:border-0">
+                        <td className="py-3 px-3 text-sm text-zinc-400">
+                          {liveData?.label || paperData?.label || period}
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          {liveData ? (
+                            <span className={`text-lg font-bold ${liveData.return >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {liveData.return >= 0 ? '+' : ''}{liveData.return.toFixed(2)}%
+                            </span>
+                          ) : (
+                            <span className="text-zinc-600">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          {paperData ? (
+                            <span className={`text-lg font-bold ${paperData.return >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {paperData.return >= 0 ? '+' : ''}{paperData.return.toFixed(2)}%
+                            </span>
+                          ) : (
+                            <span className="text-zinc-600">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          {liveData && paperData ? (
+                            <span className={`text-sm font-medium ${diff >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {diff >= 0 ? '+' : ''}{diff.toFixed(2)}%
+                            </span>
+                          ) : (
+                            <span className="text-zinc-600">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Stats Row */}
+            <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Live Stats */}
+              {performance.allTimeStats?.live && (
+                <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+                  <div className="text-xs text-emerald-400 mb-2 font-medium">Live Portfolio Stats</div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <div className="text-xs text-zinc-500">Best Day</div>
+                      <div className="text-sm text-emerald-400">{performance.allTimeStats.live.bestDay?.return?.toFixed(2)}%</div>
                     </div>
-                  )}
+                    <div>
+                      <div className="text-xs text-zinc-500">Worst Day</div>
+                      <div className="text-sm text-red-400">{performance.allTimeStats.live.worstDay?.return?.toFixed(2)}%</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-zinc-500">Win Rate</div>
+                      <div className="text-sm text-zinc-300">{performance.allTimeStats.live.winningDays}/{performance.allTimeStats.live.winningDays + performance.allTimeStats.live.losingDays}</div>
+                    </div>
+                  </div>
                 </div>
               )}
               
-              {/* Paper Portfolio Performance */}
-              {performance.performanceMetrics.paper && (
-                <div className="p-4 rounded-lg bg-black/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-zinc-400">Paper Trading</span>
-                    <span className="text-xs text-zinc-600">Since Feb 4, 2026</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {Object.entries(performance.performanceMetrics.paper).map(([period, data]) => (
-                      <div key={period} className="text-center p-2 rounded bg-white/5">
-                        <div className="text-xs text-zinc-500 mb-1">{data.label}</div>
-                        <div className={`text-lg font-bold ${data.return >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {data.return >= 0 ? '+' : ''}{data.return.toFixed(2)}%
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {performance.allTimeStats?.paper && (
-                    <div className="mt-3 pt-3 border-t border-white/10 flex justify-between text-xs text-zinc-500">
-                      <span>Best Day: <span className="text-emerald-400">{performance.allTimeStats.paper.bestDay?.return?.toFixed(2)}%</span></span>
-                      <span>Worst Day: <span className="text-red-400">{performance.allTimeStats.paper.worstDay?.return?.toFixed(2)}%</span></span>
-                      <span>Win Rate: <span className="text-zinc-300">{performance.allTimeStats.paper.winningDays}/{performance.allTimeStats.paper.winningDays + performance.allTimeStats.paper.losingDays} days</span></span>
+              {/* Paper Stats */}
+              {performance.allTimeStats?.paper && (
+                <div className="p-3 rounded-lg bg-purple-500/5 border border-purple-500/10">
+                  <div className="text-xs text-purple-400 mb-2 font-medium">Paper Trading Stats</div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <div className="text-xs text-zinc-500">Best Day</div>
+                      <div className="text-sm text-emerald-400">{performance.allTimeStats.paper.bestDay?.return?.toFixed(2)}%</div>
                     </div>
-                  )}
+                    <div>
+                      <div className="text-xs text-zinc-500">Worst Day</div>
+                      <div className="text-sm text-red-400">{performance.allTimeStats.paper.worstDay?.return?.toFixed(2)}%</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-zinc-500">Win Rate</div>
+                      <div className="text-sm text-zinc-300">{performance.allTimeStats.paper.winningDays}/{performance.allTimeStats.paper.winningDays + performance.allTimeStats.paper.losingDays}</div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
