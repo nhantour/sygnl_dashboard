@@ -1,20 +1,20 @@
 {
-  "lastUpdated": "2026-02-05T01:00:56.705332Z",
-  "btcPrice": 72720,
-  "totalValue": 187185.56,
-  "dayChange": -9227.91,
-  "dayChangePercent": -4.93,
+  "lastUpdated": "2026-02-05T01:20:56.161343Z",
+  "btcPrice": 72451,
+  "totalValue": 186772.89,
+  "dayChange": -10612.9,
+  "dayChangePercent": -5.68,
   "holdings": [
     {
       "symbol": "BTC",
       "name": "Bitcoin (Ledger)",
       "wallet": "Ledger",
       "quantity": 1.16398,
-      "current_price": 72720,
-      "current_value": 84644.6256,
-      "day_change": -3542.262037583023,
-      "day_change_pct": -4.184863495436175,
-      "allocation_pct": 45.21963376641196,
+      "current_price": 72451,
+      "current_value": 84331.51498,
+      "day_change": -4593.1004520115075,
+      "day_change_pct": -5.446481606669587,
+      "allocation_pct": 45.151903676367134,
       "type": "Crypto"
     },
     {
@@ -22,11 +22,11 @@
       "name": "Bitcoin (Uphold)",
       "wallet": "Uphold",
       "quantity": 0.37012,
-      "current_price": 72720,
-      "current_value": 26915.1264,
-      "day_change": -1126.3612994641046,
-      "day_change_pct": -4.184863495436175,
-      "allocation_pct": 14.378847445509713,
+      "current_price": 72451,
+      "current_value": 26815.56412,
+      "day_change": -1460.5047675204892,
+      "day_change_pct": -5.446481606669587,
+      "allocation_pct": 14.357310768825066,
       "type": "Crypto"
     },
     {
@@ -38,7 +38,7 @@
       "current_value": 25954.44,
       "day_change": -3411.2400000000007,
       "day_change_pct": -11.616417532303018,
-      "allocation_pct": 13.865620682860143,
+      "allocation_pct": 13.896256638244614,
       "type": "Equity"
     },
     {
@@ -50,7 +50,7 @@
       "current_value": 22712.76,
       "day_change": -116.64000000000033,
       "day_change_pct": -0.5109201293069477,
-      "allocation_pct": 12.133820449250246,
+      "allocation_pct": 12.16063000869434,
       "type": "ETF"
     },
     {
@@ -62,7 +62,7 @@
       "current_value": 20300.5,
       "day_change": -797.4999999999994,
       "day_change_pct": -3.779979144942646,
-      "allocation_pct": 10.84512062954941,
+      "allocation_pct": 10.869082819150973,
       "type": "Equity"
     },
     {
@@ -74,7 +74,7 @@
       "current_value": 6270.84,
       "day_change": -221.4000000000002,
       "day_change_pct": -3.410225130309419,
-      "allocation_pct": 3.3500660697324505,
+      "allocation_pct": 3.357468008455195,
       "type": "Equity"
     },
     {
@@ -86,15 +86,86 @@
       "current_value": 387.27,
       "day_change": -12.509999999999962,
       "day_change_pct": -3.129221071589365,
-      "allocation_pct": 0.20689095668607174,
+      "allocation_pct": 0.20734808026268303,
       "type": "Equity"
     }
   ],
   "allocationByType": {
-    "Crypto": 111559.75200000001,
+    "Crypto": 111147.0791,
     "Equity": 52913.049999999996,
     "ETF": 22712.76
   },
   "btcTotal": 1.5341,
-  "moveConsiderations": []
+  "moveConsiderations": [
+    {
+      "symbol": "VOO",
+      "action": "REDUCE",
+      "currentAllocation": 12.16,
+      "signalConfidence": null,
+      "signalAction": null,
+      "reasoning": "[FINANCIAL] S&P 500 (VOO) Market Fragility: Market state classified as FRAGILE with 68% confidence. Reduced position sizing ...",
+      "urgency": "HIGH",
+      "suggestedSize": 5678.19
+    },
+    {
+      "symbol": "TSLA",
+      "action": "WATCH",
+      "currentAllocation": 10.87,
+      "signalConfidence": null,
+      "signalAction": null,
+      "reasoning": "[FINANCIAL] Tech Stocks Under Pressure: NVIDIA (NVDA) and Tesla (TSLA) experiencing volatility amid AI sector concerns a...",
+      "urgency": "MEDIUM",
+      "suggestedSize": null
+    },
+    {
+      "symbol": "NVDA",
+      "action": "WATCH",
+      "currentAllocation": 3.36,
+      "signalConfidence": null,
+      "signalAction": null,
+      "reasoning": "[FINANCIAL] Tech Stocks Under Pressure: NVIDIA (NVDA) and Tesla (TSLA) experiencing volatility amid AI sector concerns a...",
+      "urgency": "MEDIUM",
+      "suggestedSize": null
+    },
+    {
+      "symbol": "MSTR",
+      "action": "WATCH",
+      "currentAllocation": 0.21,
+      "signalConfidence": null,
+      "signalAction": null,
+      "reasoning": "[FINANCIAL] Bitcoin Holding Key Levels: BTC maintaining support around $74K despite dollar weakness. Traditional correla...",
+      "urgency": "LOW",
+      "suggestedSize": null
+    }
+  ],
+  "paperPositions": [
+    {
+      "symbol": "AAPL",
+      "quantity": 11.5013,
+      "entry_price": 276.49,
+      "current_price": 276.49,
+      "current_value": 3180.0,
+      "cost_basis": 3180.0,
+      "unrealized_pl": -0.0,
+      "unrealized_pl_pct": -0.0,
+      "signal_confidence": 75,
+      "order_id": "116405ce-465e-47d3-8634-e1fa51727c79"
+    },
+    {
+      "symbol": "NVDA",
+      "quantity": 16.1892,
+      "entry_price": 174.19,
+      "current_price": 174.19,
+      "current_value": 2820.0,
+      "cost_basis": 2820.0,
+      "unrealized_pl": 0.0,
+      "unrealized_pl_pct": 0.0,
+      "signal_confidence": 67,
+      "order_id": "aec6c3ce-d11b-4452-9b29-84487f8ea6df"
+    }
+  ],
+  "paperTotal": 6000.0,
+  "paperTotalInvested": 6000.0,
+  "paperTotalPL": 0.0,
+  "paperTotalPLPct": 0.0
 }

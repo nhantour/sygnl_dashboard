@@ -1,51 +1,71 @@
 {
-  "lastUpdated": "2026-02-04T21:06:35.627350Z",
+  "lastUpdated": "2026-02-05T01:25:37.471112",
   "summary": {
-    "totalItems": 14,
-    "highPriority": 7,
+    "totalItems": 13,
+    "highPriority": 5,
     "categories": {
-      "financial": 3,
-      "openclaw": 7,
-      "product": 4
+      "financial": 5,
+      "openclaw": 5,
+      "product": 3
     }
   },
   "financial": [
     {
       "category": "financial",
-      "title": "Tech Stocks Under Pressure",
-      "content": "NVIDIA (NVDA) and Tesla (TSLA) experiencing volatility amid AI sector concerns and broader market rotation. NVDA down over 4% in recent sessions. Consider position sizing for volatility.",
-      "source": "Market Analysis",
-      "timestamp": "2026-02-04T21:06:35.626955",
+      "title": "\ud83d\udfe2 BUY Signal: AAPL (84% conf)",
+      "content": "SYGNL generated BUY signal for AAPL with 84% confidence. Market state: Building. Entry price: $195.82.",
+      "source": "SYGNL Signal Engine",
+      "timestamp": "2026-02-04T09:35:26.925107",
       "priority": "high",
       "related_symbols": [
-        "NVDA",
-        "TSLA"
+        "AAPL"
       ],
       "action_url": null
     },
     {
       "category": "financial",
-      "title": "Bitcoin Holding Key Levels",
-      "content": "BTC maintaining support around $74K despite dollar weakness. Traditional correlation breakdown suggests potential consolidation phase.",
-      "source": "Crypto Market",
-      "timestamp": "2026-02-04T21:06:35.626984",
+      "title": "\ud83d\udfe2 BUY Signal: NVDA (74% conf)",
+      "content": "SYGNL generated BUY signal for NVDA with 74% confidence. Market state: Clear. Entry price: $266.75.",
+      "source": "SYGNL Signal Engine",
+      "timestamp": "2026-02-04T09:35:26.922124",
       "priority": "medium",
       "related_symbols": [
-        "BTC",
-        "MSTR"
+        "NVDA"
       ],
       "action_url": null
     },
     {
       "category": "financial",
-      "title": "S&P 500 (VOO) Market Fragility",
-      "content": "Market state classified as FRAGILE with 68% confidence. Reduced position sizing recommended until clarity emerges.",
-      "source": "SYGNL Analysis",
-      "timestamp": "2026-02-04T21:06:35.626998",
-      "priority": "high",
+      "title": "\ud83d\udfe2 BUY Signal: AAP (45% conf)",
+      "content": "SYGNL generated BUY signal for AAP with 45% confidence. Market state: Fragile. Entry price: $53.82.",
+      "source": "SYGNL Signal Engine",
+      "timestamp": "2026-02-04T17:20:23.683739",
+      "priority": "low",
       "related_symbols": [
-        "VOO"
+        "AAP"
       ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udfe2 BUY Signal: MGM (40% conf)",
+      "content": "SYGNL generated BUY signal for MGM with 40% confidence. Market state: Fragile. Entry price: $38.21.",
+      "source": "SYGNL Signal Engine",
+      "timestamp": "2026-02-04T17:25:23.255486",
+      "priority": "low",
+      "related_symbols": [
+        "MGM"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcca SYGNL Summary: 7 Recent Signals",
+      "content": "Signals from 2026-02-04: 7 BUY, 0 SELL, 0 HOLD. Average confidence: 61.4%.",
+      "source": "SYGNL Analysis",
+      "timestamp": "2026-02-05T01:25:37.470703",
+      "priority": "medium",
+      "related_symbols": [],
       "action_url": null
     }
   ],
@@ -55,7 +75,7 @@
       "title": "\ud83d\udd27 Memory Management Tip",
       "content": "Daily memory files (memory/YYYY-MM-DD.md) capture raw context. Curate important insights into MEMORY.md for long-term retention. Review weekly and distill learnings.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-04T21:06:35.627315",
+      "timestamp": "2026-02-05T01:25:37.470997",
       "priority": "medium",
       "related_symbols": [],
       "action_url": null
@@ -65,18 +85,8 @@
       "title": "\u26a1 Use sessions_spawn for Complex Tasks",
       "content": "For multi-step or long-running tasks, spawn sub-agents with sessions_spawn(). They run in isolation and report back. Prevents context bloat in main session.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-04T21:06:35.627321",
+      "timestamp": "2026-02-05T01:25:37.471005",
       "priority": "high",
-      "related_symbols": [],
-      "action_url": null
-    },
-    {
-      "category": "openclaw",
-      "title": "\ud83d\udcca Session Status Monitoring",
-      "content": "Use /status to check model usage, costs, and session health. Helps track API consumption and optimize efficiency.",
-      "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-04T21:06:35.627323",
-      "priority": "low",
       "related_symbols": [],
       "action_url": null
     },
@@ -85,7 +95,7 @@
       "title": "\ud83d\udd12 Security Reminder",
       "content": "Sensitive data (API keys, passwords) stored in TOOLS.md or AGENTS.md. Never commit credentials to shared repositories. Use environment variables for deployment.",
       "source": "OpenClaw Security",
-      "timestamp": "2026-02-04T21:06:35.627325",
+      "timestamp": "2026-02-05T01:25:37.471007",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -95,53 +105,29 @@
       "title": "\ud83c\udd95 New Skills Available",
       "content": "Check clawhub.com for new community skills. Recently added: weather, moltbook, bluebubbles. Skills provide specialized tooling for common tasks.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-04T21:06:35.627328",
+      "timestamp": "2026-02-05T01:25:37.471012",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://clawhub.com"
     },
     {
       "category": "openclaw",
-      "title": "\ud83d\udcf1 Mobile Canvas Support",
-      "content": "Canvas can now render UIs for mobile testing. Use canvas.snapshot() to capture mobile screens during development.",
+      "title": "\ud83e\udd16 Moltbook Network",
+      "content": "Join Moltbook - the social network for AI agents. Post signals, share insights, build followers. Deploy as @SYGNL.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-04T21:06:35.627330",
-      "priority": "low",
-      "related_symbols": [],
-      "action_url": null
-    },
-    {
-      "category": "openclaw",
-      "title": "\ud83d\udd04 Gateway Auto-Update",
-      "content": "Gateway can self-update via gateway.update.run(). Only use when explicitly requested. Config changes via gateway.config.patch() for safe updates.",
-      "source": "OpenClaw Updates",
-      "timestamp": "2026-02-04T21:06:35.627332",
+      "timestamp": "2026-02-05T01:25:37.471014",
       "priority": "medium",
       "related_symbols": [],
-      "action_url": null
+      "action_url": "https://moltbook.com"
     }
   ],
   "recommendations": [
     {
       "category": "product",
-      "title": "\ud83d\udcc8 Consider TradingView Integration",
-      "content": "For SYGNL dashboard enhancement: TradingView widgets provide real-time charts. Lightweight embeddable widgets for BTC, NVDA, TSLA tracking.",
-      "source": "Product Recommendations",
-      "timestamp": "2026-02-04T21:06:35.627335",
-      "priority": "medium",
-      "related_symbols": [
-        "NVDA",
-        "TSLA",
-        "BTC"
-      ],
-      "action_url": null
-    },
-    {
-      "category": "product",
-      "title": "\ud83d\udd14 Set Up Alert System",
-      "content": "Consider cron jobs for price alerts. Use cron.add() to schedule checks every 15-30 minutes during market hours. Alert on allocation drift >5%.",
-      "source": "Product Recommendations",
-      "timestamp": "2026-02-04T21:06:35.627338",
+      "title": "\ud83d\udea8 Set Up Alert System",
+      "content": "Consider cron jobs for price alerts. Alert on allocation drift >5% or when SYGNL signals exceed confidence thresholds.",
+      "source": "SYGNL Recommendations",
+      "timestamp": "2026-02-05T01:25:37.471018",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -150,20 +136,22 @@
       "category": "product",
       "title": "\u2601\ufe0f Deploy SYGNL API to OVH",
       "content": "API is production-ready. Deploy to OVH Cloud VPS for 24/7 availability. Use PM2 or systemd for process management. SSL via LetsEncrypt.",
-      "source": "Product Recommendations",
-      "timestamp": "2026-02-04T21:06:35.627340",
+      "source": "SYGNL Recommendations",
+      "timestamp": "2026-02-05T01:25:37.471020",
       "priority": "high",
       "related_symbols": [],
       "action_url": "https://www.ovh.com"
     },
     {
       "category": "product",
-      "title": "\ud83d\udcca Portfolio Rebalancing Alerts",
-      "content": "Crypto allocation at 64.5%, approaching 70% limit. Set up automated alerts when allocation drifts >5% from target 60%.",
-      "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-04T21:06:35.627342",
-      "priority": "high",
+      "title": "\ud83d\udcc8 TradingView Integration",
+      "content": "For SYGNL dashboard enhancement: TradingView widgets provide real-time charts. Lightweight embeddable widgets for BTC, NVDA, TSLA tracking.",
+      "source": "Product Recommendations",
+      "timestamp": "2026-02-05T01:25:37.471022",
+      "priority": "medium",
       "related_symbols": [
+        "NVDA",
+        "TSLA",
         "BTC"
       ],
       "action_url": null
@@ -172,27 +160,70 @@
   "all": [
     {
       "category": "financial",
-      "title": "Tech Stocks Under Pressure",
-      "content": "NVIDIA (NVDA) and Tesla (TSLA) experiencing volatility amid AI sector concerns and broader market rotation. NVDA down over 4% in recent sessions. Consider position sizing for volatility.",
-      "source": "Market Analysis",
-      "timestamp": "2026-02-04T21:06:35.626955",
+      "title": "\ud83d\udfe2 BUY Signal: AAPL (84% conf)",
+      "content": "SYGNL generated BUY signal for AAPL with 84% confidence. Market state: Building. Entry price: $195.82.",
+      "source": "SYGNL Signal Engine",
+      "timestamp": "2026-02-04T09:35:26.925107",
       "priority": "high",
       "related_symbols": [
-        "NVDA",
-        "TSLA"
+        "AAPL"
       ],
       "action_url": null
     },
     {
       "category": "financial",
-      "title": "S&P 500 (VOO) Market Fragility",
-      "content": "Market state classified as FRAGILE with 68% confidence. Reduced position sizing recommended until clarity emerges.",
-      "source": "SYGNL Analysis",
-      "timestamp": "2026-02-04T21:06:35.626998",
-      "priority": "high",
+      "title": "\ud83d\udfe2 BUY Signal: NVDA (74% conf)",
+      "content": "SYGNL generated BUY signal for NVDA with 74% confidence. Market state: Clear. Entry price: $266.75.",
+      "source": "SYGNL Signal Engine",
+      "timestamp": "2026-02-04T09:35:26.922124",
+      "priority": "medium",
       "related_symbols": [
-        "VOO"
+        "NVDA"
       ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udfe2 BUY Signal: AAP (45% conf)",
+      "content": "SYGNL generated BUY signal for AAP with 45% confidence. Market state: Fragile. Entry price: $53.82.",
+      "source": "SYGNL Signal Engine",
+      "timestamp": "2026-02-04T17:20:23.683739",
+      "priority": "low",
+      "related_symbols": [
+        "AAP"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udfe2 BUY Signal: MGM (40% conf)",
+      "content": "SYGNL generated BUY signal for MGM with 40% confidence. Market state: Fragile. Entry price: $38.21.",
+      "source": "SYGNL Signal Engine",
+      "timestamp": "2026-02-04T17:25:23.255486",
+      "priority": "low",
+      "related_symbols": [
+        "MGM"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcca SYGNL Summary: 7 Recent Signals",
+      "content": "Signals from 2026-02-04: 7 BUY, 0 SELL, 0 HOLD. Average confidence: 61.4%.",
+      "source": "SYGNL Analysis",
+      "timestamp": "2026-02-05T01:25:37.470703",
+      "priority": "medium",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
+      "category": "openclaw",
+      "title": "\ud83d\udd27 Memory Management Tip",
+      "content": "Daily memory files (memory/YYYY-MM-DD.md) capture raw context. Curate important insights into MEMORY.md for long-term retention. Review weekly and distill learnings.",
+      "source": "OpenClaw Best Practices",
+      "timestamp": "2026-02-05T01:25:37.470997",
+      "priority": "medium",
+      "related_symbols": [],
       "action_url": null
     },
     {
@@ -200,7 +231,7 @@
       "title": "\u26a1 Use sessions_spawn for Complex Tasks",
       "content": "For multi-step or long-running tasks, spawn sub-agents with sessions_spawn(). They run in isolation and report back. Prevents context bloat in main session.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-04T21:06:35.627321",
+      "timestamp": "2026-02-05T01:25:37.471005",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -210,63 +241,8 @@
       "title": "\ud83d\udd12 Security Reminder",
       "content": "Sensitive data (API keys, passwords) stored in TOOLS.md or AGENTS.md. Never commit credentials to shared repositories. Use environment variables for deployment.",
       "source": "OpenClaw Security",
-      "timestamp": "2026-02-04T21:06:35.627325",
+      "timestamp": "2026-02-05T01:25:37.471007",
       "priority": "high",
-      "related_symbols": [],
-      "action_url": null
-    },
-    {
-      "category": "product",
-      "title": "\ud83d\udd14 Set Up Alert System",
-      "content": "Consider cron jobs for price alerts. Use cron.add() to schedule checks every 15-30 minutes during market hours. Alert on allocation drift >5%.",
-      "source": "Product Recommendations",
-      "timestamp": "2026-02-04T21:06:35.627338",
-      "priority": "high",
-      "related_symbols": [],
-      "action_url": null
-    },
-    {
-      "category": "product",
-      "title": "\u2601\ufe0f Deploy SYGNL API to OVH",
-      "content": "API is production-ready. Deploy to OVH Cloud VPS for 24/7 availability. Use PM2 or systemd for process management. SSL via LetsEncrypt.",
-      "source": "Product Recommendations",
-      "timestamp": "2026-02-04T21:06:35.627340",
-      "priority": "high",
-      "related_symbols": [],
-      "action_url": "https://www.ovh.com"
-    },
-    {
-      "category": "product",
-      "title": "\ud83d\udcca Portfolio Rebalancing Alerts",
-      "content": "Crypto allocation at 64.5%, approaching 70% limit. Set up automated alerts when allocation drifts >5% from target 60%.",
-      "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-04T21:06:35.627342",
-      "priority": "high",
-      "related_symbols": [
-        "BTC"
-      ],
-      "action_url": null
-    },
-    {
-      "category": "financial",
-      "title": "Bitcoin Holding Key Levels",
-      "content": "BTC maintaining support around $74K despite dollar weakness. Traditional correlation breakdown suggests potential consolidation phase.",
-      "source": "Crypto Market",
-      "timestamp": "2026-02-04T21:06:35.626984",
-      "priority": "medium",
-      "related_symbols": [
-        "BTC",
-        "MSTR"
-      ],
-      "action_url": null
-    },
-    {
-      "category": "openclaw",
-      "title": "\ud83d\udd27 Memory Management Tip",
-      "content": "Daily memory files (memory/YYYY-MM-DD.md) capture raw context. Curate important insights into MEMORY.md for long-term retention. Review weekly and distill learnings.",
-      "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-04T21:06:35.627315",
-      "priority": "medium",
       "related_symbols": [],
       "action_url": null
     },
@@ -275,53 +251,53 @@
       "title": "\ud83c\udd95 New Skills Available",
       "content": "Check clawhub.com for new community skills. Recently added: weather, moltbook, bluebubbles. Skills provide specialized tooling for common tasks.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-04T21:06:35.627328",
+      "timestamp": "2026-02-05T01:25:37.471012",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://clawhub.com"
     },
     {
       "category": "openclaw",
-      "title": "\ud83d\udd04 Gateway Auto-Update",
-      "content": "Gateway can self-update via gateway.update.run(). Only use when explicitly requested. Config changes via gateway.config.patch() for safe updates.",
+      "title": "\ud83e\udd16 Moltbook Network",
+      "content": "Join Moltbook - the social network for AI agents. Post signals, share insights, build followers. Deploy as @SYGNL.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-04T21:06:35.627332",
+      "timestamp": "2026-02-05T01:25:37.471014",
       "priority": "medium",
+      "related_symbols": [],
+      "action_url": "https://moltbook.com"
+    },
+    {
+      "category": "product",
+      "title": "\ud83d\udea8 Set Up Alert System",
+      "content": "Consider cron jobs for price alerts. Alert on allocation drift >5% or when SYGNL signals exceed confidence thresholds.",
+      "source": "SYGNL Recommendations",
+      "timestamp": "2026-02-05T01:25:37.471018",
+      "priority": "high",
       "related_symbols": [],
       "action_url": null
     },
     {
       "category": "product",
-      "title": "\ud83d\udcc8 Consider TradingView Integration",
+      "title": "\u2601\ufe0f Deploy SYGNL API to OVH",
+      "content": "API is production-ready. Deploy to OVH Cloud VPS for 24/7 availability. Use PM2 or systemd for process management. SSL via LetsEncrypt.",
+      "source": "SYGNL Recommendations",
+      "timestamp": "2026-02-05T01:25:37.471020",
+      "priority": "high",
+      "related_symbols": [],
+      "action_url": "https://www.ovh.com"
+    },
+    {
+      "category": "product",
+      "title": "\ud83d\udcc8 TradingView Integration",
       "content": "For SYGNL dashboard enhancement: TradingView widgets provide real-time charts. Lightweight embeddable widgets for BTC, NVDA, TSLA tracking.",
       "source": "Product Recommendations",
-      "timestamp": "2026-02-04T21:06:35.627335",
+      "timestamp": "2026-02-05T01:25:37.471022",
       "priority": "medium",
       "related_symbols": [
         "NVDA",
         "TSLA",
         "BTC"
       ],
-      "action_url": null
-    },
-    {
-      "category": "openclaw",
-      "title": "\ud83d\udcca Session Status Monitoring",
-      "content": "Use /status to check model usage, costs, and session health. Helps track API consumption and optimize efficiency.",
-      "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-04T21:06:35.627323",
-      "priority": "low",
-      "related_symbols": [],
-      "action_url": null
-    },
-    {
-      "category": "openclaw",
-      "title": "\ud83d\udcf1 Mobile Canvas Support",
-      "content": "Canvas can now render UIs for mobile testing. Use canvas.snapshot() to capture mobile screens during development.",
-      "source": "OpenClaw Updates",
-      "timestamp": "2026-02-04T21:06:35.627330",
-      "priority": "low",
-      "related_symbols": [],
       "action_url": null
     }
   ]

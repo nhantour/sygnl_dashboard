@@ -424,21 +424,42 @@ export default function Dashboard() {
                   
                   {/* SYGNL Insight Section */}
                   {hasInsight && (
-                    <div className={`mt-3 pt-3 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm ${
+                    <div className={`mt-3 pt-3 border-t border-white/5 text-sm ${
                       move.action === 'ADD' ? 'text-emerald-400' :
                       move.action === 'REDUCE' ? 'text-red-400' :
                       move.action === 'HOLD' ? 'text-blue-400' :
                       'text-yellow-400'
                     }`}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">SYGNL: {move.action}</span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          move.action === 'ADD' ? 'bg-emerald-500/20 text-emerald-400' :
+                          move.action === 'REDUCE' ? 'bg-red-500/20 text-red-400' :
+                          move.action === 'HOLD' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          {move.action}
+                        </span>
                         {move.signalConfidence && (
-                          <span className="text-xs text-zinc-500">({move.signalConfidence}% conf)</span>
+                          <span className="text-xs text-zinc-500">{move.signalConfidence}% confidence</span>
+                        )}
+                        {move.urgency && (
+                          <span className={`text-xs ${
+                            move.urgency === 'HIGH' ? 'text-red-400' :
+                            move.urgency === 'MEDIUM' ? 'text-yellow-400' :
+                            'text-zinc-500'
+                          }`}>
+                            • {move.urgency} priority
+                          </span>
                         )}
                       </div>
-                      <div className="text-xs text-zinc-400 line-clamp-1">
+                      <div className="text-sm text-zinc-300 leading-relaxed">
                         {move.reasoning}
                       </div>
+                      {move.suggestedSize && (
+                        <div className="mt-2 text-xs text-zinc-500">
+                          Suggested: {formatCurrency(move.suggestedSize)}
+                        </div>
+                      )}
                     </div>
                   )}
                   
