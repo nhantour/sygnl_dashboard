@@ -1,0 +1,128 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2026-02-05T00:50:34.706631Z",
+  "dailyHistory": [
+    {
+      "date": "2026-02-04",
+      "timestamp": "2026-02-04T21:00:00Z",
+      "livePortfolio": {
+        "totalValue": 189298.02,
+        "dayChange": -9207.95,
+        "dayChangePercent": -4.86,
+        "btcPrice": 72911,
+        "holdings": {
+          "BTC": 111852.77,
+          "Equity": 52913.05,
+          "ETF": 22712.76
+        }
+      },
+      "paperPortfolio": {
+        "totalValue": 6000.0,
+        "totalInvested": 6000.0,
+        "totalPL": 0.0,
+        "totalPLPercent": 0.0,
+        "positions": 4
+      }
+    },
+    {
+      "date": "2026-02-05",
+      "timestamp": "2026-02-05T00:50:34.706625Z",
+      "livePortfolio": {
+        "totalValue": 189298.02,
+        "dayChange": -4559.29,
+        "dayChangePercent": -2.41,
+        "btcPrice": 74097,
+        "holdings": {
+          "Crypto": 113672.2077,
+          "Equity": 52913.049999999996,
+          "ETF": 22712.76
+        }
+      }
+    }
+  ],
+  "weeklyPerformance": {
+    "currentWeek": {
+      "startDate": "2026-02-03",
+      "endDate": "2026-02-05",
+      "liveReturn": -4.86,
+      "paperReturn": 0.45,
+      "startingValue": 198505.97,
+      "endingValue": 189298.02
+    },
+    "previousWeeks": []
+  },
+  "monthlyPerformance": {
+    "currentMonth": {
+      "month": "2026-02",
+      "startDate": "2026-02-01",
+      "liveReturn": -4.86,
+      "paperReturn": 0.45,
+      "bestDay": {
+        "date": "2026-02-04",
+        "return": -4.86
+      },
+      "worstDay": {
+        "date": "2026-02-04",
+        "return": -4.86
+      }
+    },
+    "previousMonths": []
+  },
+  "allTimeStats": {
+    "live": {
+      "startingValue": 189298.02,
+      "currentValue": 189298.02,
+      "totalReturn": 0.0,
+      "totalReturnDollar": 0.0,
+      "bestDay": {
+        "date": "2026-02-05",
+        "return": -2.41
+      },
+      "worstDay": {
+        "date": "2026-02-04",
+        "return": -4.86
+      },
+      "winningDays": 0,
+      "losingDays": 2,
+      "avgDailyReturn": -3.64
+    }
+  },
+  "performanceMetrics": {
+    "live": {
+      "daily": {
+        "return": -2.41,
+        "label": "1D"
+      },
+      "weekly": {
+        "return": 0.0,
+        "label": "1W"
+      },
+      "monthly": {
+        "return": 0.0,
+        "label": "1M"
+      },
+      "ytd": {
+        "return": 0.0,
+        "label": "YTD"
+      }
+    },
+    "paper": {
+      "daily": {
+        "return": 0.45,
+        "label": "1D"
+      },
+      "weekly": {
+        "return": 0.45,
+        "label": "1W"
+      },
+      "monthly": {
+        "return": 0.45,
+        "label": "1M"
+      },
+      "ytd": {
+        "return": 0.45,
+        "label": "YTD"
+      }
+    }
+  }
+}

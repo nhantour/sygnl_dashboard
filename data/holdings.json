@@ -1,20 +1,20 @@
 {
-  "lastUpdated": "2026-02-04T21:03:16.439291Z",
+  "lastUpdated": "2026-02-05T00:50:34.706055Z",
   "btcPrice": 74097,
-  "totalValue": 189299.22,
-  "dayChange": -8959.75,
-  "dayChangePercent": -4.73,
+  "totalValue": 189298.02,
+  "dayChange": -4559.29,
+  "dayChangePercent": -2.41,
   "holdings": [
     {
       "symbol": "BTC",
       "name": "Bitcoin (Ledger)",
       "wallet": "Ledger",
       "quantity": 1.16398,
-      "current_price": 73426,
-      "current_value": 85466.39548,
-      "day_change": -3339.709990524811,
-      "day_change_pct": -3.907629392544508,
-      "allocation_pct": 45.39569159561454,
+      "current_price": 74097,
+      "current_value": 86247.42606,
+      "day_change": 0,
+      "day_change_pct": 0,
+      "allocation_pct": 45.56171644474648,
       "type": "Crypto"
     },
     {
@@ -22,11 +22,11 @@
       "name": "Bitcoin (Uphold)",
       "wallet": "Uphold",
       "quantity": 0.37012,
-      "current_price": 73426,
-      "current_value": 27176.43112,
-      "day_change": -1061.9542102897326,
-      "day_change_pct": -3.907629392544508,
-      "allocation_pct": 14.434829957017175,
+      "current_price": 74097,
+      "current_value": 27424.78164,
+      "day_change": 0,
+      "day_change_pct": 0,
+      "allocation_pct": 14.487622201867358,
       "type": "Crypto"
     },
     {
@@ -38,7 +38,7 @@
       "current_value": 25954.44,
       "day_change": -3411.2400000000007,
       "day_change_pct": -11.616417532303018,
-      "allocation_pct": 13.785766290478424,
+      "allocation_pct": 13.710888426276425,
       "type": "Equity"
     },
     {
@@ -46,11 +46,11 @@
       "name": "VOO",
       "wallet": null,
       "quantity": 36,
-      "current_price": 630.94,
-      "current_value": 22713.840000000004,
-      "day_change": -115.55999999999722,
-      "day_change_pct": -0.5061893873689068,
-      "allocation_pct": 12.064513424266543,
+      "current_price": 630.91,
+      "current_value": 22712.76,
+      "day_change": -116.64000000000033,
+      "day_change_pct": -0.5109201293069477,
+      "allocation_pct": 11.998414075310203,
       "type": "ETF"
     },
     {
@@ -62,7 +62,7 @@
       "current_value": 20300.5,
       "day_change": -797.4999999999994,
       "day_change_pct": -3.779979144942646,
-      "allocation_pct": 10.782661794277097,
+      "allocation_pct": 10.724095395532501,
       "type": "Equity"
     },
     {
@@ -70,11 +70,11 @@
       "name": "NVDA",
       "wallet": null,
       "quantity": 36,
-      "current_price": 174.1934,
-      "current_value": 6270.9624,
-      "day_change": -221.27760000000023,
-      "day_change_pct": -3.408339802595102,
-      "allocation_pct": 3.330837500742751,
+      "current_price": 174.19,
+      "current_value": 6270.84,
+      "day_change": -221.4000000000002,
+      "day_change_pct": -3.410225130309419,
+      "allocation_pct": 3.31268128224039,
       "type": "Equity"
     },
     {
@@ -86,26 +86,15 @@
       "current_value": 387.27,
       "day_change": -12.509999999999962,
       "day_change_pct": -3.129221071589365,
-      "allocation_pct": 0.2056994376034921,
+      "allocation_pct": 0.20458217402664325,
       "type": "Equity"
     }
   ],
   "allocationByType": {
-    "Crypto": 112642.8266,
-    "Equity": 52913.1724,
-    "ETF": 22713.840000000004
+    "Crypto": 113672.2077,
+    "Equity": 52913.049999999996,
+    "ETF": 22712.76
   },
   "btcTotal": 1.5341,
-  "moveConsiderations": [
-    {
-      "symbol": "NVDA",
-      "action": "ADD",
-      "currentAllocation": 3.31,
-      "signalConfidence": 74,
-      "signalAction": "BUY",
-      "reasoning": "Strong BUY signal (74% conf) on NVDA. Currently 3.3% allocation - consider adding.",
-      "urgency": "HIGH",
-      "suggestedSize": 9464.96
-    }
-  ]
+  "moveConsiderations": []
 }

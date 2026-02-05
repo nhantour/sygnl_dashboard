@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import holdingsData from '../../data/holdings.json'
 import intelligenceData from '../../data/intelligence.json'
+import performanceData from '../../data/performance_history.json'
 
 const portfolioHistory = [
   { date: 'Jan 30', value: 100000 },
@@ -46,6 +47,8 @@ export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [holdings, setHoldings] = useState(holdingsData)
   const [intelligence, setIntelligence] = useState(intelligenceData)
+  const [performance, setPerformance] = useState(performanceData)
+  const [activeTab, setActiveTab] = useState('all')
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -152,6 +155,75 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Performance Metrics */}
+        {performance && performance.performanceMetrics && (
+          <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <TrendingUpIcon className="w-5 h-5 text-emerald-400" />
+              Performance Metrics
+              <span className="text-xs text-zinc-500 font-normal ml-auto">
+                Track gains/losses over time
+              </span>
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Live Portfolio Performance */}
+              {performance.performanceMetrics.live && (
+                <div className="p-4 rounded-lg bg-black/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-zinc-400">Live Portfolio</span>
+                    <span className="text-xs text-zinc-600">Since Feb 1, 2026</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Object.entries(performance.performanceMetrics.live).map(([period, data]) => (
+                      <div key={period} className="text-center p-2 rounded bg-white/5">
+                        <div className="text-xs text-zinc-500 mb-1">{data.label}</div>
+                        <div className={`text-lg font-bold ${data.return >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {data.return >= 0 ? '+' : ''}{data.return.toFixed(2)}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {performance.allTimeStats?.live && (
+                    <div className="mt-3 pt-3 border-t border-white/10 flex justify-between text-xs text-zinc-500">
+                      <span>Best Day: <span className="text-emerald-400">{performance.allTimeStats.live.bestDay?.return?.toFixed(2)}%</span></span>
+                      <span>Worst Day: <span className="text-red-400">{performance.allTimeStats.live.worstDay?.return?.toFixed(2)}%</span></span>
+                      <span>Win Rate: <span className="text-zinc-300">{performance.allTimeStats.live.winningDays}/{performance.allTimeStats.live.winningDays + performance.allTimeStats.live.losingDays} days</span></span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Paper Portfolio Performance */}
+              {performance.performanceMetrics.paper && (
+                <div className="p-4 rounded-lg bg-black/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-zinc-400">Paper Trading</span>
+                    <span className="text-xs text-zinc-600">Since Feb 4, 2026</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Object.entries(performance.performanceMetrics.paper).map(([period, data]) => (
+                      <div key={period} className="text-center p-2 rounded bg-white/5">
+                        <div className="text-xs text-zinc-500 mb-1">{data.label}</div>
+                        <div className={`text-lg font-bold ${data.return >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {data.return >= 0 ? '+' : ''}{data.return.toFixed(2)}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {performance.allTimeStats?.paper && (
+                    <div className="mt-3 pt-3 border-t border-white/10 flex justify-between text-xs text-zinc-500">
+                      <span>Best Day: <span className="text-emerald-400">{performance.allTimeStats.paper.bestDay?.return?.toFixed(2)}%</span></span>
+                      <span>Worst Day: <span className="text-red-400">{performance.allTimeStats.paper.worstDay?.return?.toFixed(2)}%</span></span>
+                      <span>Win Rate: <span className="text-zinc-300">{performance.allTimeStats.paper.winningDays}/{performance.allTimeStats.paper.winningDays + performance.allTimeStats.paper.losingDays} days</span></span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Objectives */}
         <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -200,54 +272,215 @@ export default function Dashboard() {
               Updated: {new Date(holdings.lastUpdated).toLocaleString()}
             </span>
           </h3>
-          <div className="space-y-2">
-            {holdings.holdings.map((holding, idx) => (
-              <div key={`${holding.symbol}-${idx}`} className="flex items-center justify-between p-3 rounded-lg bg-black/30">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${
-                    holding.type === 'Crypto' 
-                      ? 'bg-gradient-to-br from-orange-500/20 to-yellow-600/20 text-orange-400'
-                      : 'bg-gradient-to-br from-emerald-500/20 to-teal-600/20 text-emerald-400'
-                  }`}>
-                    {holding.symbol.slice(0, 2)}
+          {/* Header */}
+          <div className="flex items-center justify-between px-3 py-2 text-xs text-zinc-600 border-b border-white/5 mb-2">
+            <div className="flex-1">Asset</div>
+            <div className="flex items-center gap-4">
+              <div className="text-right min-w-[100px]">Position</div>
+              <div className="text-right min-w-[60px]">Day P&L</div>
+              <div className="text-right min-w-[70px]">Qty</div>
+              <div className="w-24"></div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {holdings.holdings.map((holding, idx) => {
+              // Find move consideration for this holding
+              const move = holdings.moveConsiderations?.find(m => m.symbol === holding.symbol)
+              const hasInsight = move && (move.signalConfidence || move.reasoning)
+              
+              return (
+                <div key={`${holding.symbol}-${idx}`} className="p-3 rounded-lg bg-black/30">
+                  {/* Main Row - Mobile Responsive */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    {/* Asset Info */}
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                        holding.type === 'Crypto' 
+                          ? 'bg-gradient-to-br from-orange-500/20 to-yellow-600/20 text-orange-400'
+                          : 'bg-gradient-to-br from-emerald-500/20 to-teal-600/20 text-emerald-400'
+                      }`}>
+                        {holding.symbol.slice(0, 2)}
+                      </div>
+                      <div>
+                        <div className="font-medium">{holding.symbol}</div>
+                        <div className="text-xs text-zinc-500">
+                          {holding.name}
+                          {holding.wallet && (
+                            <span className="ml-1 text-zinc-400">({holding.wallet})</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Stats - Stack on mobile, row on desktop */}
+                    <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-4">
+                      <div className="text-right min-w-[90px] sm:min-w-[100px]">
+                        <div className="font-medium">{formatCurrency(holding.value || 0)}</div>
+                        <div className="text-xs text-zinc-600">
+                          {holding.current_price ? `$${holding.current_price.toLocaleString(undefined, {maximumFractionDigits: 2})}` : ''}
+                        </div>
+                      </div>
+                      <div className="text-right min-w-[60px]">
+                        <div className={`text-sm font-medium ${(holding.day_change || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {(holding.day_change || 0) >= 0 ? '+' : ''}{formatCurrency(holding.day_change || 0)}
+                        </div>
+                        <div className={`text-xs ${(holding.day_change_pct || 0) >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {(holding.day_change_pct || 0) >= 0 ? '+' : ''}{(holding.day_change_pct || 0).toFixed(2)}%
+                        </div>
+                      </div>
+                      <div className="text-right min-w-[60px] sm:min-w-[70px]">
+                        <div className="text-sm font-medium text-zinc-300">
+                          {holding.quantity ? holding.quantity.toLocaleString(undefined, {maximumFractionDigits: holding.type === 'Crypto' ? 5 : 0}) : '-'}
+                        </div>
+                        <div className="text-xs text-zinc-600">
+                          {holding.type === 'Crypto' ? 'BTC' : 'shares'}
+                        </div>
+                      </div>
+                      <div className="w-16 sm:w-24 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${
+                            holding.type === 'Crypto'
+                              ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
+                              : 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                          }`}
+                          style={{ width: `${Math.min(holding.allocation || 0, 100)}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-medium">{holding.symbol}</div>
-                    <div className="text-xs text-zinc-500">
-                      {holding.name}
-                      {holding.quantity && (
-                        <span className="ml-2 text-zinc-400">
-                          {holding.quantity.toFixed(5)} {holding.symbol}
-                        </span>
-                      )}
+                  
+                  {/* SYGNL Insight Section */}
+                  {hasInsight && (
+                    <div className={`mt-3 pt-3 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm ${
+                      move.action === 'ADD' ? 'text-emerald-400' :
+                      move.action === 'REDUCE' ? 'text-red-400' :
+                      move.action === 'HOLD' ? 'text-blue-400' :
+                      'text-yellow-400'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">SYGNL: {move.action}</span>
+                        {move.signalConfidence && (
+                          <span className="text-xs text-zinc-500">({move.signalConfidence}% conf)</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-zinc-400 line-clamp-1">
+                        {move.reasoning}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* No Signal State */}
+                  {!hasInsight && holding.type !== 'Crypto' && (
+                    <div className="mt-3 pt-3 border-t border-white/5 text-xs text-zinc-600">
+                      No active SYGNL signal - monitoring
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-2 text-sm">
+            <div className="flex gap-4">
+              <span className="text-zinc-500">Total: <span className="text-white font-semibold">{formatCurrency(holdings.totalValue)}</span></span>
+              <span className="text-zinc-500">BTC: <span className="text-orange-400 font-semibold">{holdings.btcTotal?.toFixed(5)}</span></span>
+            </div>
+            <div className="flex gap-4">
+              <span className="text-zinc-500">Day P&L: 
+                <span className={(holdings.dayChange || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                  {(holdings.dayChange || 0) >= 0 ? '+' : ''}{formatCurrency(holdings.dayChange || 0)}
+                </span>
+                <span className={(holdings.dayChangePercent || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                  {' '}({(holdings.dayChange || 0) >= 0 ? '+' : ''}{(holdings.dayChangePercent || 0).toFixed(2)}%)
+                </span>
+              </span>
+              <span className="text-zinc-500">Positions: <span className="text-white">{holdings.holdings.length}</span></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Paper Trading Positions */}
+        {holdings.paperPositions && holdings.paperPositions.length > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Target className="w-5 h-5 text-purple-400" />
+              Paper Trading Positions
+              <span className="text-xs text-zinc-500 font-normal ml-auto">
+                SYGNL Auto-Trader
+              </span>
+            </h3>
+            
+            {/* Header */}
+            <div className="flex items-center justify-between px-3 py-2 text-xs text-zinc-600 border-b border-white/5 mb-2">
+              <div className="flex-1">Asset</div>
+              <div className="flex items-center gap-4">
+                <div className="text-right min-w-[80px]">Value</div>
+                <div className="text-right min-w-[70px]">P&L</div>
+                <div className="text-right min-w-[50px]">Qty</div>
+                <div className="w-16"></div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {holdings.paperPositions.map((pos, idx) => (
+                <div key={`paper-${idx}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg bg-purple-500/5 border border-purple-500/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center font-bold text-sm text-purple-400">
+                      {pos.symbol.slice(0, 2)}
+                    </div>
+                    <div>
+                      <div className="font-medium">{pos.symbol}</div>
+                      <div className="text-xs text-zinc-500">Paper Account</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between sm:justify-end gap-4">
+                    <div className="text-right min-w-[80px]">
+                      <div className="font-medium">{formatCurrency(pos.current_value || 0)}</div>
+                      <div className="text-xs text-zinc-600">@ ${pos.entry_price?.toFixed(2)}</div>
+                    </div>
+                    <div className="text-right min-w-[70px]">
+                      <div className={`text-sm font-medium ${(pos.unrealized_pl || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {(pos.unrealized_pl || 0) >= 0 ? '+' : ''}{formatCurrency(pos.unrealized_pl || 0)}
+                      </div>
+                      <div className={`text-xs ${(pos.unrealized_pl_pct || 0) >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                        {(pos.unrealized_pl_pct || 0) >= 0 ? '+' : ''}{(pos.unrealized_pl_pct || 0).toFixed(2)}%
+                      </div>
+                    </div>
+                    <div className="text-right min-w-[50px]">
+                      <div className="text-sm font-medium text-zinc-300">
+                        {(pos.quantity || 0).toFixed(1)}
+                      </div>
+                      <div className="text-xs text-zinc-600">{pos.signal_confidence}%</div>
+                    </div>
+                    <div className="w-16 text-right">
+                      <span className="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">
+                        BUY
+                      </span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <div className="font-medium">{formatCurrency(holding.value || 0)}</div>
-                    <div className="text-xs text-zinc-500">{(holding.allocation || 0).toFixed(1)}%</div>
-                  </div>
-                  <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${
-                        holding.type === 'Crypto'
-                          ? 'bg-gradient-to-r from-orange-500 to-yellow-500'
-                          : 'bg-gradient-to-r from-emerald-500 to-teal-500'
-                      }`}
-                      style={{ width: `${holding.allocation || 0}%` }}
-                    />
-                  </div>
-                </div>
+              ))}
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-2 text-sm">
+              <div className="flex gap-4">
+                <span className="text-zinc-500">Total: <span className="text-purple-400 font-semibold">{formatCurrency(holdings.paperTotal || 0)}</span></span>
+                <span className="text-zinc-500">Invested: <span className="text-zinc-400">{formatCurrency(holdings.paperTotalInvested || 0)}</span></span>
               </div>
-            ))}
+              <div className="flex gap-4">
+                <span className="text-zinc-500">P&L: 
+                  <span className={(holdings.paperTotalPL || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                    {(holdings.paperTotalPL || 0) >= 0 ? '+' : ''}{formatCurrency(holdings.paperTotalPL || 0)}
+                  </span>
+                  <span className={(holdings.paperTotalPLPct || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                    {' '}({(holdings.paperTotalPLPct || 0) >= 0 ? '+' : ''}{(holdings.paperTotalPLPct || 0).toFixed(2)}%)
+                  </span>
+                </span>
+                <span className="text-zinc-500">Positions: <span className="text-white">{holdings.paperPositions?.length || 0}</span></span>
+              </div>
+            </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-white/10 flex justify-between text-sm">
-            <span className="text-zinc-500">Total: <span className="text-white font-semibold">{formatCurrency(holdings.totalValue)}</span></span>
-            <span className="text-zinc-500">BTC: <span className="text-orange-400 font-semibold">{holdings.btcTotal?.toFixed(5)}</span></span>
-            <span className="text-zinc-500">Positions: <span className="text-white">{holdings.holdings.length}</span></span>
-          </div>
-        </div>
+        )}
 
         {/* Move Considerations */}
         {holdings.moveConsiderations && holdings.moveConsiderations.length > 0 && (
@@ -320,23 +553,51 @@ export default function Dashboard() {
             
             {/* Category Tabs */}
             <div className="flex gap-2 mb-4 overflow-x-auto">
-              <button className="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 text-sm font-medium">
+              <button 
+                onClick={() => setActiveTab('all')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'all' 
+                    ? 'bg-blue-500/20 text-blue-400' 
+                    : 'bg-white/5 text-zinc-400 hover:bg-white/10'
+                }`}
+              >
                 All ({intelligence.summary?.totalItems || 0})
               </button>
-              <button className="px-3 py-1.5 rounded-lg bg-white/5 text-zinc-400 text-sm">
+              <button 
+                onClick={() => setActiveTab('financial')}
+                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  activeTab === 'financial' 
+                    ? 'bg-emerald-500/20 text-emerald-400' 
+                    : 'bg-white/5 text-zinc-400 hover:bg-white/10'
+                }`}
+              >
                 📈 Financial ({intelligence.summary?.categories?.financial || 0})
               </button>
-              <button className="px-3 py-1.5 rounded-lg bg-white/5 text-zinc-400 text-sm">
+              <button 
+                onClick={() => setActiveTab('openclaw')}
+                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  activeTab === 'openclaw' 
+                    ? 'bg-blue-500/20 text-blue-400' 
+                    : 'bg-white/5 text-zinc-400 hover:bg-white/10'
+                }`}
+              >
                 🔧 OpenClaw ({intelligence.summary?.categories?.openclaw || 0})
               </button>
-              <button className="px-3 py-1.5 rounded-lg bg-white/5 text-zinc-400 text-sm">
+              <button 
+                onClick={() => setActiveTab('product')}
+                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  activeTab === 'product' 
+                    ? 'bg-yellow-500/20 text-yellow-400' 
+                    : 'bg-white/5 text-zinc-400 hover:bg-white/10'
+                }`}
+              >
                 💡 Tips ({intelligence.summary?.categories?.product || 0})
               </button>
             </div>
             
             {/* News Items */}
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {intelligence.all?.slice(0, 10).map((item, idx) => {
+              {intelligence.all?.filter(item => activeTab === 'all' || item.category === activeTab).slice(0, 10).map((item, idx) => {
                 const categoryConfig = {
                   'financial': { icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
                   'openclaw': { icon: BookOpen, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
