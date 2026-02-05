@@ -10,6 +10,7 @@ import {
 import holdingsData from '../../data/holdings.json'
 import intelligenceData from '../../data/intelligence.json'
 import performanceData from '../../data/performance_history.json'
+import versionData from '../../data/version.json'
 
 const portfolioHistory = [
   { date: 'Jan 30', value: 100000 },
@@ -81,12 +82,29 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Version Badge */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-xs text-zinc-500">
+              <span>v{versionData?.version || '1.0'}</span>
+              <span className="text-zinc-600">|</span>
+              <span>{versionData?.buildDate || '2026-02-05'}</span>
+            </div>
+            
+            {/* Last Updated */}
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-xs text-zinc-500">
+              <Clock className="w-3 h-3" />
+              <span>Updated: {new Date(holdings.lastUpdated).toLocaleTimeString()}</span>
+            </div>
+            
+            {/* Refresh Button */}
             <button 
-              onClick={() => setLastUpdated(new Date())}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/10"
+              onClick={() => window.location.reload()}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-sm font-medium transition-colors"
+              title="Refresh dashboard data"
             >
-              <RefreshCw className="w-5 h-5 text-zinc-400" />
+              <RefreshCw className="w-4 h-4" />
+              <span className="hidden sm:inline">Refresh</span>
             </button>
+            
             <a href="/" className="p-2 rounded-xl bg-white/5 hover:bg-red-500/10">
               <LogOut className="w-5 h-5 text-zinc-400" />
             </a>
@@ -276,9 +294,9 @@ export default function Dashboard() {
           <div className="flex items-center justify-between px-3 py-2 text-xs text-zinc-600 border-b border-white/5 mb-2">
             <div className="flex-1">Asset</div>
             <div className="flex items-center gap-4">
-              <div className="text-right min-w-[100px]">Position</div>
+              <div className="text-right min-w-[100px]">Total Value</div>
               <div className="text-right min-w-[60px]">Day P&L</div>
-              <div className="text-right min-w-[70px]">Qty</div>
+              <div className="text-right min-w-[70px]">Price</div>
               <div className="w-24"></div>
             </div>
           </div>
@@ -315,9 +333,9 @@ export default function Dashboard() {
                     {/* Stats - Stack on mobile, row on desktop */}
                     <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-4">
                       <div className="text-right min-w-[90px] sm:min-w-[100px]">
-                        <div className="font-medium">{formatCurrency(holding.value || 0)}</div>
+                        <div className="font-medium text-lg">{formatCurrency(holding.current_value || holding.value || 0)}</div>
                         <div className="text-xs text-zinc-600">
-                          {holding.current_price ? `$${holding.current_price.toLocaleString(undefined, {maximumFractionDigits: 2})}` : ''}
+                          {holding.quantity ? `${holding.quantity.toLocaleString(undefined, {maximumFractionDigits: holding.type === 'Crypto' ? 5 : 0})} ${holding.type === 'Crypto' ? 'BTC' : 'shares'}` : ''}
                         </div>
                       </div>
                       <div className="text-right min-w-[60px]">
@@ -330,10 +348,10 @@ export default function Dashboard() {
                       </div>
                       <div className="text-right min-w-[60px] sm:min-w-[70px]">
                         <div className="text-sm font-medium text-zinc-300">
-                          {holding.quantity ? holding.quantity.toLocaleString(undefined, {maximumFractionDigits: holding.type === 'Crypto' ? 5 : 0}) : '-'}
+                          {holding.current_price ? `$${holding.current_price.toLocaleString(undefined, {maximumFractionDigits: holding.type === 'Crypto' ? 0 : 2})}` : '-'}
                         </div>
                         <div className="text-xs text-zinc-600">
-                          {holding.type === 'Crypto' ? 'BTC' : 'shares'}
+                          per unit
                         </div>
                       </div>
                       <div className="w-16 sm:w-24 h-2 bg-zinc-800 rounded-full overflow-hidden">

@@ -1,0 +1,14 @@
+{
+  "version": "1.2.0",
+  "buildDate": "2026-02-05",
+  "lastUpdated": "2026-02-05T00:55:00Z",
+  "changes": [
+    "Added CoinGecko API key support for BTC pricing",
+    "Added Binance as backup price source",
+    "Added Performance Metrics tracking (1D, 1W, 1M, YTD)",
+    "Added gains/losses display for live and paper portfolios",
+    "Added refresh button for manual updates",
+    "Added mobile-responsive layout improvements",
+    "Added SYGNL insights per holding"
+  ]
+}
