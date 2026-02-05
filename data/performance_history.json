@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "lastUpdated": "2026-02-05T00:50:34.706631Z",
+  "lastUpdated": "2026-02-05T01:00:56.706113Z",
   "dailyHistory": [
     {
       "date": "2026-02-04",
@@ -26,12 +26,12 @@
     },
     {
       "date": "2026-02-05",
-      "timestamp": "2026-02-05T00:50:34.706625Z",
+      "timestamp": "2026-02-05T01:00:56.706107Z",
       "livePortfolio": {
-        "totalValue": 189298.02,
-        "dayChange": -4559.29,
-        "dayChangePercent": -2.41,
-        "btcPrice": 74097,
+        "totalValue": 187185.56,
+        "dayChange": -9227.91,
+        "dayChangePercent": -4.93,
+        "btcPrice": 72720,
         "holdings": {
           "Crypto": 113672.2077,
           "Equity": 52913.049999999996,
@@ -71,56 +71,38 @@
   "allTimeStats": {
     "live": {
       "startingValue": 189298.02,
-      "currentValue": 189298.02,
-      "totalReturn": 0.0,
-      "totalReturnDollar": 0.0,
+      "currentValue": 187185.56,
+      "totalReturn": -1.12,
+      "totalReturnDollar": -2112.46,
       "bestDay": {
-        "date": "2026-02-05",
-        "return": -2.41
-      },
-      "worstDay": {
         "date": "2026-02-04",
         "return": -4.86
       },
+      "worstDay": {
+        "date": "2026-02-05",
+        "return": -4.93
+      },
       "winningDays": 0,
       "losingDays": 2,
-      "avgDailyReturn": -3.64
+      "avgDailyReturn": -4.89
     }
   },
   "performanceMetrics": {
     "live": {
       "daily": {
-        "return": -2.41,
+        "return": -4.93,
         "label": "1D"
       },
       "weekly": {
-        "return": 0.0,
+        "return": -1.12,
         "label": "1W"
       },
       "monthly": {
-        "return": 0.0,
+        "return": -1.12,
         "label": "1M"
       },
       "ytd": {
-        "return": 0.0,
-        "label": "YTD"
-      }
-    },
-    "paper": {
-      "daily": {
-        "return": 0.45,
-        "label": "1D"
-      },
-      "weekly": {
-        "return": 0.45,
-        "label": "1W"
-      },
-      "monthly": {
-        "return": 0.45,
-        "label": "1M"
-      },
-      "ytd": {
-        "return": 0.45,
+        "return": -1.12,
         "label": "YTD"
       }
     }
