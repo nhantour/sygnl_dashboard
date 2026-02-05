@@ -916,8 +916,12 @@ export default function Dashboard() {
           {!chatOpen ? (
             <button
               onClick={() => setChatOpen(true)}
-              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
+              className="group flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
             >
+              <span className="relative">
+                <span className="text-lg font-bold">α</span>
+                <span className="absolute -inset-1 rounded-full bg-emerald-400/30 blur-sm animate-pulse group-hover:bg-emerald-400/50" />
+              </span>
               <MessageCircle className="w-5 h-5" />
               <span className="font-medium">ASK SYGNL</span>
             </button>
