@@ -1,20 +1,20 @@
 {
-  "lastUpdated": "2026-02-06T01:00:09.467995Z",
-  "btcPrice": 63594.53,
-  "totalValue": 170542.98,
-  "dayChange": -15175.24,
-  "dayChangePercent": -8.9,
+  "lastUpdated": "2026-02-06T05:00:08.450598Z",
+  "btcPrice": 64908.22,
+  "totalValue": 172558.31,
+  "dayChange": -11169.24,
+  "dayChangePercent": -6.47,
   "holdings": [
     {
       "symbol": "BTC",
       "name": "Bitcoin (Ledger)",
       "wallet": "Ledger",
       "quantity": 1.16398,
-      "current_price": 63444,
-      "current_value": 73847.54712,
-      "day_change": -9508.445237391688,
-      "day_change_pct": -12.875776661804023,
-      "allocation_pct": 43.36014213119943,
+      "current_price": 64817,
+      "current_value": 75445.69166,
+      "day_change": -6468.93919857899,
+      "day_change_pct": -8.57429901727405,
+      "allocation_pct": 43.75733965659925,
       "type": "Crypto"
     },
     {
@@ -26,7 +26,7 @@
       "current_value": 24181.859999999997,
       "day_change": -1772.5800000000002,
       "day_change_pct": -6.829582915293107,
-      "allocation_pct": 14.198560784868572,
+      "allocation_pct": 14.025106513926167,
       "type": "Equity"
     },
     {
@@ -34,11 +34,11 @@
       "name": "Bitcoin (Uphold)",
       "wallet": "Uphold",
       "quantity": 0.37012,
-      "current_price": 63444,
-      "current_value": 23481.89328,
-      "day_change": -3023.476134695967,
-      "day_change_pct": -12.875776661804023,
-      "allocation_pct": 13.787570066151938,
+      "current_price": 64817,
+      "current_value": 23990.068040000002,
+      "day_change": -2056.980168197096,
+      "day_change_pct": -8.57429901727405,
+      "allocation_pct": 13.913870129813672,
       "type": "Crypto"
     },
     {
@@ -50,7 +50,7 @@
       "current_value": 22431.600000000002,
       "day_change": -281.15999999999804,
       "day_change_pct": -1.237894469892686,
-      "allocation_pct": 13.170882475618416,
+      "allocation_pct": 13.00998265963769,
       "type": "ETF"
     },
     {
@@ -62,7 +62,7 @@
       "current_value": 19860.5,
       "day_change": -440.00000000000057,
       "day_change_pct": -2.1674342996477947,
-      "allocation_pct": 11.661241793140906,
+      "allocation_pct": 11.518784242396189,
       "type": "Equity"
     },
     {
@@ -74,7 +74,7 @@
       "current_value": 6187.68,
       "day_change": -83.28240000000005,
       "day_change_pct": -1.3280640942768218,
-      "allocation_pct": 3.633142801972867,
+      "allocation_pct": 3.588759139044336,
       "type": "Equity"
     },
     {
@@ -86,12 +86,12 @@
       "current_value": 320.96999999999997,
       "day_change": -66.30000000000003,
       "day_change_pct": -17.11983887210474,
-      "allocation_pct": 0.18845994704788077,
+      "allocation_pct": 0.1861576585827096,
       "type": "Equity"
     }
   ],
   "allocationByType": {
-    "Crypto": 97329.4404,
+    "Crypto": 99435.7597,
     "Equity": 50551.01,
     "ETF": 22431.600000000002
   },
@@ -100,12 +100,12 @@
     {
       "symbol": "NVDA",
       "action": "ADD",
-      "currentAllocation": 3.63,
+      "currentAllocation": 3.59,
       "signalConfidence": 74,
       "signalAction": "BUY",
-      "reasoning": "🟢 SYGNL BUY Signal (74% confidence, Clear state): Strong signal on NVDA. Currently 3.6% allocation - consider adding $3,500 to position.",
+      "reasoning": "\ud83d\udfe2 SYGNL BUY Signal (74% confidence, Clear state): Strong signal on NVDA. Currently 3.6% allocation - consider adding to position.",
       "urgency": "HIGH",
-      "suggestedSize": 3500
+      "suggestedSize": 8627.92
     },
     {
       "symbol": "AAPL",
@@ -113,49 +113,9 @@
       "currentAllocation": 0,
       "signalConfidence": 84,
       "signalAction": "BUY",
-      "reasoning": "🟢 NEW OPPORTUNITY: SYGNL BUY Signal (84% confidence, Building state) on AAPL. Not currently in portfolio - consider initiating $8,500 position.",
+      "reasoning": "\ud83d\udfe2 NEW OPPORTUNITY: SYGNL BUY Signal (84% confidence, Building state) on AAPL. Not currently in portfolio - consider initiating position.",
       "urgency": "HIGH",
-      "suggestedSize": 8500
-    },
-    {
-      "symbol": "MSFT",
-      "action": "BUY",
-      "currentAllocation": 0,
-      "signalConfidence": 71,
-      "signalAction": "BUY",
-      "reasoning": "🟢 SYGNL BUY Signal (71% confidence, Building state) on MSFT. Strong momentum in cloud sector - consider $5,000 position.",
-      "urgency": "MEDIUM",
-      "suggestedSize": 5000
-    },
-    {
-      "symbol": "TSLA",
-      "action": "REDUCE",
-      "currentAllocation": 11.66,
-      "signalConfidence": 45,
-      "signalAction": "HOLD",
-      "reasoning": "🟡 TSLA showing weakness. Signal confidence only 45% - consider reducing position by $2,000 to lock in some gains.",
-      "urgency": "MEDIUM",
-      "suggestedSize": 2000
-    },
-    {
-      "symbol": "AMD",
-      "action": "BUY",
-      "currentAllocation": 0,
-      "signalConfidence": 68,
-      "signalAction": "BUY",
-      "reasoning": "🟢 SYGNL BUY Signal (68% confidence, Building state) on AMD. AI chip demand rising - consider $4,000 position.",
-      "urgency": "MEDIUM",
-      "suggestedSize": 4000
-    },
-    {
-      "symbol": "PLTR",
-      "action": "HOLD",
-      "currentAllocation": 14.20,
-      "signalConfidence": 52,
-      "signalAction": "HOLD",
-      "reasoning": "⚪ PLTR signal neutral (52% confidence). High allocation already - maintain current position and monitor.",
-      "urgency": "LOW",
-      "suggestedSize": null
+      "suggestedSize": 8627.92
     }
   ],
   "paperPositions": [
