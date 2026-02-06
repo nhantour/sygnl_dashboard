@@ -1,6 +1,4 @@
 // Telegram Bot Webhook - Pages Router
-import { NextApiRequest, NextApiResponse } from 'next'
-
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8313463050:AAHNC9folpMvjYDoRhbsrBwQDKioADGnamA'
 
 export default async function handler(req, res) {
