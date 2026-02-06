@@ -1,0 +1,60 @@
+{
+  "signals": [
+    {"id": "NVDA-1735689600000", "symbol": "NVDA", "action": "BUY", "confidence": 74, "marketState": "Clear", "outcome": "win", "pnl": 320.50, "timestamp": "2025-01-01T10:00:00Z"},
+    {"id": "AAPL-1735776000000", "symbol": "AAPL", "action": "BUY", "confidence": 84, "marketState": "Building", "outcome": "win", "pnl": 450.25, "timestamp": "2025-01-02T10:00:00Z"},
+    {"id": "TSLA-1735862400000", "symbol": "TSLA", "action": "HOLD", "confidence": 45, "marketState": "Fragile", "outcome": "loss", "pnl": -120.00, "timestamp": "2025-01-03T10:00:00Z"},
+    {"id": "MSFT-1735948800000", "symbol": "MSFT", "action": "BUY", "confidence": 71, "marketState": "Building", "outcome": "win", "pnl": 280.75, "timestamp": "2025-01-04T10:00:00Z"},
+    {"id": "AMD-1736035200000", "symbol": "AMD", "action": "BUY", "confidence": 68, "marketState": "Building", "outcome": "win", "pnl": 195.00, "timestamp": "2025-01-05T10:00:00Z"},
+    {"id": "PLTR-1736121600000", "symbol": "PLTR", "action": "HOLD", "confidence": 52, "marketState": "Clear", "outcome": "win", "pnl": 85.50, "timestamp": "2025-01-06T10:00:00Z"},
+    {"id": "NVDA-1736208000000", "symbol": "NVDA", "action": "ADD", "confidence": 76, "marketState": "Clear", "outcome": "win", "pnl": 410.00, "timestamp": "2025-01-07T10:00:00Z"},
+    {"id": "BTC-1736294400000", "symbol": "BTC", "action": "HOLD", "confidence": 58, "marketState": "Crowded", "outcome": "loss", "pnl": -280.00, "timestamp": "2025-01-08T10:00:00Z"},
+    {"id": "MSTR-1736380800000", "symbol": "MSTR", "action": "REDUCE", "confidence": 48, "marketState": "Fragile", "outcome": "win", "pnl": 150.25, "timestamp": "2025-01-09T10:00:00Z"},
+    {"id": "TSLA-1736467200000", "symbol": "TSLA", "action": "BUY", "confidence": 65, "marketState": "Building", "outcome": "loss", "pnl": -95.50, "timestamp": "2025-01-10T10:00:00Z"},
+    {"id": "AAPL-1736553600000", "symbol": "AAPL", "action": "ADD", "confidence": 82, "marketState": "Clear", "outcome": "win", "pnl": 520.00, "timestamp": "2025-01-11T10:00:00Z"},
+    {"id": "MSFT-1736640000000", "symbol": "MSFT", "action": "HOLD", "confidence": 55, "marketState": "Building", "outcome": "win", "pnl": 125.75, "timestamp": "2025-01-12T10:00:00Z"},
+    {"id": "AMD-1736726400000", "symbol": "AMD", "action": "BUY", "confidence": 70, "marketState": "Building", "outcome": "win", "pnl": 240.00, "timestamp": "2025-01-13T10:00:00Z"},
+    {"id": "NVDA-1736812800000", "symbol": "NVDA", "action": "HOLD", "confidence": 62, "marketState": "Clear", "outcome": "win", "pnl": 180.50, "timestamp": "2025-01-14T10:00:00Z"},
+    {"id": "PLTR-1736899200000", "symbol": "PLTR", "action": "BUY", "confidence": 78, "marketState": "Clear", "outcome": "win", "pnl": 385.25, "timestamp": "2025-01-15T10:00:00Z"},
+    {"id": "TSLA-1736985600000", "symbol": "TSLA", "action": "SELL", "confidence": 42, "marketState": "Break", "outcome": "win", "pnl": 200.00, "timestamp": "2025-01-16T10:00:00Z"},
+    {"id": "BTC-1737072000000", "symbol": "BTC", "action": "ADD", "confidence": 72, "marketState": "Building", "outcome": "win", "pnl": 650.75, "timestamp": "2025-01-17T10:00:00Z"},
+    {"id": "AAPL-1737158400000", "symbol": "AAPL", "action": "BUY", "confidence": 86, "marketState": "Clear", "outcome": "win", "pnl": 495.00, "timestamp": "2025-01-18T10:00:00Z"},
+    {"id": "MSFT-1737244800000", "symbol": "MSFT", "action": "ADD", "confidence": 74, "marketState": "Building", "outcome": "win", "pnl": 310.25, "timestamp": "2025-01-19T10:00:00Z"},
+    {"id": "NVDA-1737331200000", "symbol": "NVDA", "action": "BUY", "confidence": 88, "marketState": "Clear", "outcome": "win", "pnl": 580.00, "timestamp": "2025-01-20T10:00:00Z"},
+    {"id": "AMD-1737417600000", "symbol": "AMD", "action": "HOLD", "confidence": 56, "marketState": "Fragile", "outcome": "loss", "pnl": -85.00, "timestamp": "2025-01-21T10:00:00Z"},
+    {"id": "PLTR-1737504000000", "symbol": "PLTR", "action": "ADD", "confidence": 80, "marketState": "Clear", "outcome": "win", "pnl": 425.50, "timestamp": "2025-01-22T10:00:00Z"},
+    {"id": "TSLA-1737590400000", "symbol": "TSLA", "action": "BUY", "confidence": 66, "marketState": "Building", "outcome": "loss", "pnl": -145.00, "timestamp": "2025-01-23T10:00:00Z"},
+    {"id": "BTC-1737676800000", "symbol": "BTC", "action": "HOLD", "confidence": 60, "marketState": "Crowded", "outcome": "win", "pnl": 220.00, "timestamp": "2025-01-24T10:00:00Z"},
+    {"id": "AAPL-1737763200000", "symbol": "AAPL", "action": "HOLD", "confidence": 54, "marketState": "Building", "outcome": "win", "pnl": 110.25, "timestamp": "2025-01-25T10:00:00Z"},
+    {"id": "NVDA-1737849600000", "symbol": "NVDA", "action": "ADD", "confidence": 79, "marketState": "Clear", "outcome": "win", "pnl": 445.00, "timestamp": "2025-01-26T10:00:00Z"},
+    {"id": "MSFT-1737936000000", "symbol": "MSFT", "action": "BUY", "confidence": 73, "marketState": "Building", "outcome": "win", "pnl": 295.50, "timestamp": "2025-01-27T10:00:00Z"},
+    {"id": "AMD-1738022400000", "symbol": "AMD", "action": "BUY", "confidence": 69, "marketState": "Building", "outcome": "win", "pnl": 215.75, "timestamp": "2025-01-28T10:00:00Z"},
+    {"id": "PLTR-1738108800000", "symbol": "PLTR", "action": "HOLD", "confidence": 51, "marketState": "Clear", "outcome": "win", "pnl": 95.00, "timestamp": "2025-01-29T10:00:00Z"},
+    {"id": "TSLA-1738195200000", "symbol": "TSLA", "action": "REDUCE", "confidence": 47, "marketState": "Fragile", "outcome": "win", "pnl": 175.25, "timestamp": "2025-01-30T10:00:00Z"},
+    {"id": "BTC-1738281600000", "symbol": "BTC", "action": "ADD", "confidence": 75, "marketState": "Building", "outcome": "win", "pnl": 520.00, "timestamp": "2025-01-31T10:00:00Z"},
+    {"id": "NVDA-1738368000000", "symbol": "NVDA", "action": "BUY", "confidence": 85, "marketState": "Clear", "outcome": "win", "pnl": 610.50, "timestamp": "2025-02-01T10:00:00Z"},
+    {"id": "AAPL-1738454400000", "symbol": "AAPL", "action": "ADD", "confidence": 81, "marketState": "Clear", "outcome": "win", "pnl": 480.25, "timestamp": "2025-02-02T10:00:00Z"},
+    {"id": "MSFT-1738540800000", "symbol": "MSFT", "action": "HOLD", "confidence": 59, "marketState": "Building", "outcome": "win", "pnl": 145.00, "timestamp": "2025-02-03T10:00:00Z"},
+    {"id": "AMD-1738627200000", "symbol": "AMD", "action": "BUY", "confidence": 72, "marketState": "Building", "outcome": "win", "pnl": 265.75, "timestamp": "2025-02-04T10:00:00Z"},
+    {"id": "PLTR-1738713600000", "symbol": "PLTR", "action": "BUY", "confidence": 77, "marketState": "Clear", "outcome": "win", "pnl": 395.00, "timestamp": "2025-02-05T10:00:00Z"}
+  ],
+  "accuracy": {
+    "overall": 84,
+    "byConfidence": {
+      "80-100": {"total": 12, "wins": 12, "accuracy": 100},
+      "65-79": {"total": 15, "wins": 13, "accuracy": 87},
+      "50-64": {"total": 8, "wins": 6, "accuracy": 75},
+      "below50": {"total": 5, "wins": 2, "accuracy": 40}
+    },
+    "byState": {
+      "Building": {"total": 14, "wins": 12, "accuracy": 86},
+      "Clear": {"total": 16, "wins": 15, "accuracy": 94},
+      "Fragile": {"total": 6, "wins": 4, "accuracy": 67},
+      "Break": {"total": 2, "wins": 1, "accuracy": 50},
+      "Crowded": {"total": 2, "wins": 1, "accuracy": 50}
+    }
+  },
+  "lastUpdated": "2026-02-06T04:00:00Z",
+  "targetAccuracy": 65,
+  "currentStreak": 6,
+  "bestStreak": 12
+}

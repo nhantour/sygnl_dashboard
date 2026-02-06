@@ -15,12 +15,12 @@ export default function Login() {
     setLoading(true)
     setError('')
 
-    // Demo access - delayed data, read-only
+    // Demo access - shows performance dashboard (public track record)
     if (password === 'sygnl2026') {
       localStorage.setItem('sygnl_auth', 'true')
       localStorage.setItem('sygnl_mode', 'demo')
       localStorage.setItem('sygnl_access_level', 'read-only')
-      router.push('/dashboard')
+      router.push('/performance')
       return
     }
 
@@ -53,10 +53,13 @@ export default function Login() {
         <div className="rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 backdrop-blur-xl p-8 shadow-2xl">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 mb-4 shadow-lg shadow-emerald-500/20">
-              <TrendingUp className="w-8 h-8 text-white" />
+            <div className="inline-flex items-center justify-center mb-4">
+              <img 
+                src="/logo.png" 
+                alt="SYGNL" 
+                className="h-32 w-auto object-contain"
+              />
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">SYGNL</h1>
             <p className="text-zinc-400 text-sm mt-1">Market Intelligence Dashboard</p>
           </div>
 

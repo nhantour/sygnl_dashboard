@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  distDir: 'dist',
+  // output: 'export', // Removed for API routes support
   images: {
     unoptimized: true,
   },
