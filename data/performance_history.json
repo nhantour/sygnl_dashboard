@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "lastUpdated": "2026-02-06T17:59:30.103979Z",
+  "lastUpdated": "2026-02-10T16:09:52.817760+00:00Z",
   "dailyHistory": [
     {
       "date": "2026-02-04",
@@ -53,6 +53,21 @@
           "ETF": 22431.600000000002
         }
       }
+    },
+    {
+      "date": "2026-02-10",
+      "timestamp": "2026-02-10T16:09:52.817745+00:00Z",
+      "livePortfolio": {
+        "totalValue": 183738.05,
+        "dayChange": -91.63,
+        "dayChangePercent": -0.05,
+        "btcPrice": 69024,
+        "holdings": {
+          "Crypto": 105889.7184,
+          "Equity": 54841.815,
+          "ETF": 23006.52
+        }
+      }
     }
   ],
   "weeklyPerformance": {
@@ -86,9 +101,9 @@
   "allTimeStats": {
     "live": {
       "startingValue": 189298.02,
-      "currentValue": 184598.06,
-      "totalReturn": -2.48,
-      "totalReturnDollar": -4699.96,
+      "currentValue": 183738.05,
+      "totalReturn": -2.94,
+      "totalReturnDollar": -5559.97,
       "bestDay": {
         "date": "2026-02-06",
         "return": 5.76
@@ -98,26 +113,26 @@
         "return": -9.49
       },
       "winningDays": 1,
-      "losingDays": 2,
-      "avgDailyReturn": -2.86
+      "losingDays": 3,
+      "avgDailyReturn": -2.16
     }
   },
   "performanceMetrics": {
     "live": {
       "daily": {
-        "return": 5.76,
+        "return": -0.05,
         "label": "1D"
       },
       "weekly": {
-        "return": -2.48,
+        "return": -2.94,
         "label": "1W"
       },
       "monthly": {
-        "return": -2.48,
+        "return": -2.94,
         "label": "1M"
       },
       "ytd": {
-        "return": -2.48,
+        "return": -2.94,
         "label": "YTD"
       }
     }
