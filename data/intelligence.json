@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-02-10T08:41:40.330351",
+  "lastUpdated": "2026-02-10T11:00:19.465855",
   "summary": {
     "totalItems": 8,
     "highPriority": 4,
@@ -16,7 +16,7 @@
       "title": "\ud83d\udd27 Memory Management Tip",
       "content": "Daily memory files (memory/YYYY-MM-DD.md) capture raw context. Curate important insights into MEMORY.md for long-term retention. Review weekly and distill learnings.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-10T08:41:40.330323",
+      "timestamp": "2026-02-10T11:00:19.465824",
       "priority": "medium",
       "related_symbols": [],
       "action_url": null
@@ -26,7 +26,7 @@
       "title": "\u26a1 Use sessions_spawn for Complex Tasks",
       "content": "For multi-step or long-running tasks, spawn sub-agents with sessions_spawn(). They run in isolation and report back. Prevents context bloat in main session.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-10T08:41:40.330329",
+      "timestamp": "2026-02-10T11:00:19.465831",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -36,7 +36,7 @@
       "title": "\ud83d\udd12 Security Reminder",
       "content": "Sensitive data (API keys, passwords) stored in TOOLS.md or AGENTS.md. Never commit credentials to shared repositories. Use environment variables for deployment.",
       "source": "OpenClaw Security",
-      "timestamp": "2026-02-10T08:41:40.330332",
+      "timestamp": "2026-02-10T11:00:19.465834",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -46,7 +46,7 @@
       "title": "\ud83c\udd95 New Skills Available",
       "content": "Check clawhub.com for new community skills. Recently added: weather, moltbook, bluebubbles. Skills provide specialized tooling for common tasks.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-10T08:41:40.330335",
+      "timestamp": "2026-02-10T11:00:19.465838",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://clawhub.com"
@@ -56,7 +56,7 @@
       "title": "\ud83e\udd16 Moltbook Network",
       "content": "Join Moltbook - the social network for AI agents. Post signals, share insights, build followers. Deploy as @SYGNL.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-10T08:41:40.330337",
+      "timestamp": "2026-02-10T11:00:19.465841",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://moltbook.com"
@@ -68,7 +68,7 @@
       "title": "\ud83d\udea8 Set Up Alert System",
       "content": "Consider cron jobs for price alerts. Alert on allocation drift >5% or when SYGNL signals exceed confidence thresholds.",
       "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-10T08:41:40.330340",
+      "timestamp": "2026-02-10T11:00:19.465844",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -78,7 +78,7 @@
       "title": "\u2601\ufe0f Deploy SYGNL API to OVH",
       "content": "API is production-ready. Deploy to OVH Cloud VPS for 24/7 availability. Use PM2 or systemd for process management. SSL via LetsEncrypt.",
       "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-10T08:41:40.330342",
+      "timestamp": "2026-02-10T11:00:19.465846",
       "priority": "high",
       "related_symbols": [],
       "action_url": "https://www.ovh.com"
@@ -88,7 +88,7 @@
       "title": "\ud83d\udcc8 TradingView Integration",
       "content": "For SYGNL dashboard enhancement: TradingView widgets provide real-time charts. Lightweight embeddable widgets for BTC, NVDA, TSLA tracking.",
       "source": "Product Recommendations",
-      "timestamp": "2026-02-10T08:41:40.330343",
+      "timestamp": "2026-02-10T11:00:19.465848",
       "priority": "medium",
       "related_symbols": [
         "NVDA",
@@ -104,7 +104,7 @@
       "title": "\ud83d\udd27 Memory Management Tip",
       "content": "Daily memory files (memory/YYYY-MM-DD.md) capture raw context. Curate important insights into MEMORY.md for long-term retention. Review weekly and distill learnings.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-10T08:41:40.330323",
+      "timestamp": "2026-02-10T11:00:19.465824",
       "priority": "medium",
       "related_symbols": [],
       "action_url": null
@@ -114,7 +114,7 @@
       "title": "\u26a1 Use sessions_spawn for Complex Tasks",
       "content": "For multi-step or long-running tasks, spawn sub-agents with sessions_spawn(). They run in isolation and report back. Prevents context bloat in main session.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-10T08:41:40.330329",
+      "timestamp": "2026-02-10T11:00:19.465831",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -124,7 +124,7 @@
       "title": "\ud83d\udd12 Security Reminder",
       "content": "Sensitive data (API keys, passwords) stored in TOOLS.md or AGENTS.md. Never commit credentials to shared repositories. Use environment variables for deployment.",
       "source": "OpenClaw Security",
-      "timestamp": "2026-02-10T08:41:40.330332",
+      "timestamp": "2026-02-10T11:00:19.465834",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -134,7 +134,7 @@
       "title": "\ud83c\udd95 New Skills Available",
       "content": "Check clawhub.com for new community skills. Recently added: weather, moltbook, bluebubbles. Skills provide specialized tooling for common tasks.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-10T08:41:40.330335",
+      "timestamp": "2026-02-10T11:00:19.465838",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://clawhub.com"
@@ -144,7 +144,7 @@
       "title": "\ud83e\udd16 Moltbook Network",
       "content": "Join Moltbook - the social network for AI agents. Post signals, share insights, build followers. Deploy as @SYGNL.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-10T08:41:40.330337",
+      "timestamp": "2026-02-10T11:00:19.465841",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://moltbook.com"
@@ -154,7 +154,7 @@
       "title": "\ud83d\udea8 Set Up Alert System",
       "content": "Consider cron jobs for price alerts. Alert on allocation drift >5% or when SYGNL signals exceed confidence thresholds.",
       "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-10T08:41:40.330340",
+      "timestamp": "2026-02-10T11:00:19.465844",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -164,7 +164,7 @@
       "title": "\u2601\ufe0f Deploy SYGNL API to OVH",
       "content": "API is production-ready. Deploy to OVH Cloud VPS for 24/7 availability. Use PM2 or systemd for process management. SSL via LetsEncrypt.",
       "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-10T08:41:40.330342",
+      "timestamp": "2026-02-10T11:00:19.465846",
       "priority": "high",
       "related_symbols": [],
       "action_url": "https://www.ovh.com"
@@ -174,7 +174,7 @@
       "title": "\ud83d\udcc8 TradingView Integration",
       "content": "For SYGNL dashboard enhancement: TradingView widgets provide real-time charts. Lightweight embeddable widgets for BTC, NVDA, TSLA tracking.",
       "source": "Product Recommendations",
-      "timestamp": "2026-02-10T08:41:40.330343",
+      "timestamp": "2026-02-10T11:00:19.465848",
       "priority": "medium",
       "related_symbols": [
         "NVDA",
