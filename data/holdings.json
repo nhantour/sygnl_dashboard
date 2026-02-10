@@ -1,20 +1,32 @@
 {
-  "lastUpdated": "2026-02-06T05:00:08.450598Z",
-  "btcPrice": 64908.22,
-  "totalValue": 172558.31,
-  "dayChange": -11169.24,
-  "dayChangePercent": -6.47,
+  "lastUpdated": "2026-02-06T17:59:29.688908Z",
+  "btcPrice": 70820.96,
+  "totalValue": 184598.06,
+  "dayChange": 10631.15,
+  "dayChangePercent": 5.76,
   "holdings": [
     {
       "symbol": "BTC",
       "name": "Bitcoin (Ledger)",
       "wallet": "Ledger",
       "quantity": 1.16398,
-      "current_price": 64817,
-      "current_value": 75445.69166,
-      "day_change": -6468.93919857899,
-      "day_change_pct": -8.57429901727405,
-      "allocation_pct": 43.75733965659925,
+      "current_price": 70751,
+      "current_value": 82352.74898,
+      "day_change": 5812.773565010384,
+      "day_change_pct": 7.058384373328036,
+      "allocation_pct": 44.638238845915666,
+      "type": "Crypto"
+    },
+    {
+      "symbol": "BTC",
+      "name": "Bitcoin (Uphold)",
+      "wallet": "Uphold",
+      "quantity": 0.37012,
+      "current_price": 70751,
+      "current_value": 26186.36012,
+      "day_change": 1848.3339506534849,
+      "day_change_pct": 7.058384373328036,
+      "allocation_pct": 14.193976667683557,
       "type": "Crypto"
     },
     {
@@ -22,35 +34,23 @@
       "name": "PLTR",
       "wallet": null,
       "quantity": 186,
-      "current_price": 130.01,
-      "current_value": 24181.859999999997,
-      "day_change": -1772.5800000000002,
-      "day_change_pct": -6.829582915293107,
-      "allocation_pct": 14.025106513926167,
+      "current_price": 136.67,
+      "current_value": 25420.62,
+      "day_change": 1238.7599999999993,
+      "day_change_pct": 5.1226828705484175,
+      "allocation_pct": 13.778917173084762,
       "type": "Equity"
-    },
-    {
-      "symbol": "BTC",
-      "name": "Bitcoin (Uphold)",
-      "wallet": "Uphold",
-      "quantity": 0.37012,
-      "current_price": 64817,
-      "current_value": 23990.068040000002,
-      "day_change": -2056.980168197096,
-      "day_change_pct": -8.57429901727405,
-      "allocation_pct": 13.913870129813672,
-      "type": "Crypto"
     },
     {
       "symbol": "VOO",
       "name": "VOO",
       "wallet": null,
       "quantity": 36,
-      "current_price": 623.1,
-      "current_value": 22431.600000000002,
-      "day_change": -281.15999999999804,
-      "day_change_pct": -1.237894469892686,
-      "allocation_pct": 13.00998265963769,
+      "current_price": 633.789,
+      "current_value": 22816.404,
+      "day_change": 384.8039999999987,
+      "day_change_pct": 1.7154549831487664,
+      "allocation_pct": 12.36733568668427,
       "type": "ETF"
     },
     {
@@ -58,11 +58,11 @@
       "name": "TSLA",
       "wallet": null,
       "quantity": 50,
-      "current_price": 397.21,
-      "current_value": 19860.5,
-      "day_change": -440.00000000000057,
-      "day_change_pct": -2.1674342996477947,
-      "allocation_pct": 11.518784242396189,
+      "current_price": 413.4602,
+      "current_value": 20673.01,
+      "day_change": 812.5100000000003,
+      "day_change_pct": 4.091085320107753,
+      "allocation_pct": 11.205536785033294,
       "type": "Equity"
     },
     {
@@ -70,11 +70,11 @@
       "name": "NVDA",
       "wallet": null,
       "quantity": 36,
-      "current_price": 171.88,
-      "current_value": 6187.68,
-      "day_change": -83.28240000000005,
-      "day_change_pct": -1.3280640942768218,
-      "allocation_pct": 3.588759139044336,
+      "current_price": 184.475,
+      "current_value": 6641.099999999999,
+      "day_change": 455.9399999999997,
+      "day_change_pct": 7.371515045690001,
+      "allocation_pct": 3.59972206964949,
       "type": "Equity"
     },
     {
@@ -82,30 +82,30 @@
       "name": "MSTR",
       "wallet": null,
       "quantity": 3,
-      "current_price": 106.99,
-      "current_value": 320.96999999999997,
-      "day_change": -66.30000000000003,
-      "day_change_pct": -17.11983887210474,
-      "allocation_pct": 0.1861576585827096,
+      "current_price": 133.0,
+      "current_value": 399.0,
+      "day_change": 78.03000000000002,
+      "day_change_pct": 24.31068324142444,
+      "allocation_pct": 0.2162727719489462,
       "type": "Equity"
     }
   ],
   "allocationByType": {
-    "Crypto": 99435.7597,
-    "Equity": 50551.01,
-    "ETF": 22431.600000000002
+    "Crypto": 108539.1091,
+    "Equity": 53133.729999999996,
+    "ETF": 22816.404
   },
   "btcTotal": 1.5341,
   "moveConsiderations": [
     {
       "symbol": "NVDA",
       "action": "ADD",
-      "currentAllocation": 3.59,
+      "currentAllocation": 3.6,
       "signalConfidence": 74,
       "signalAction": "BUY",
       "reasoning": "\ud83d\udfe2 SYGNL BUY Signal (74% confidence, Clear state): Strong signal on NVDA. Currently 3.6% allocation - consider adding to position.",
       "urgency": "HIGH",
-      "suggestedSize": 8627.92
+      "suggestedSize": 9229.9
     },
     {
       "symbol": "AAPL",
@@ -115,15 +115,15 @@
       "signalAction": "BUY",
       "reasoning": "\ud83d\udfe2 NEW OPPORTUNITY: SYGNL BUY Signal (84% confidence, Building state) on AAPL. Not currently in portfolio - consider initiating position.",
       "urgency": "HIGH",
-      "suggestedSize": 8627.92
+      "suggestedSize": 9229.9
     }
   ],
   "paperPositions": [
     {
       "symbol": "AAPL",
-      "quantity": 11.5255,
-      "entry_price": 275.91,
-      "current_price": 275.91,
+      "quantity": 11.4286,
+      "entry_price": 278.25,
+      "current_price": 278.25,
       "current_value": 3180.0,
       "cost_basis": 3180.0,
       "unrealized_pl": 0.0,
@@ -133,9 +133,9 @@
     },
     {
       "symbol": "NVDA",
-      "quantity": 16.4068,
-      "entry_price": 171.88,
-      "current_price": 171.88,
+      "quantity": 15.2866,
+      "entry_price": 184.48,
+      "current_price": 184.48,
       "current_value": 2820.0,
       "cost_basis": 2820.0,
       "unrealized_pl": 0.0,

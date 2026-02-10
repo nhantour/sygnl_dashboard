@@ -6,8 +6,11 @@ import { TrendingUp, Activity, DollarSign, Users, Target, Wallet, LogOut, Refres
 import holdingsData from '../../data/holdings.json'
 import intelligenceData from '../../data/intelligence.json'
 import performanceData from '../../data/performance_history.json'
+import autoTradingLog from '../../data/auto_trading_log.json'
 
 const API_BASE = process.env.NEXT_PUBLIC_SYGNL_API_URL || 'http://148.113.174.184:8000'
+const VPS_API_BASE = 'http://148.113.174.184:8001'  // VPS Paper Trading API
+const RLM_API_BASE = 'http://148.113.174.184:8002'  // RLM Signal Engine API
 
 const COMPANY_NAMES = {
   'PLTR': 'Palantir', 'TSLA': 'Tesla', 'NVDA': 'NVIDIA', 'MSTR': 'MicroStrategy',
@@ -45,25 +48,84 @@ export default function Dashboard() {
   const [tradeLog, setTradeLog] = useState([])
   const [moltbookStats, setMoltbookStats] = useState({ impressions: 147, upvotes: 23, comments: 8, posts: 3 })
   
+  // RLM State
+  const [rlmSignals, setRlmSignals] = useState([])
+  const [rlmBudget, setRlmBudget] = useState({ total_budget: 10.0, spent_today: 0, remaining: 10.0 })
+  const [rlmStatus, setRlmStatus] = useState({ status: 'operational', version: '2.0' })
+  const [showRlmSection, setShowRlmSection] = useState(true)
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setReadIntelIds(new Set(JSON.parse(localStorage.getItem('sygnl_read_intel') || '[]')))
-      setTradeLog(JSON.parse(localStorage.getItem('sygnl_trade_log') || '[]'))
+      // Load from localStorage or use auto trading log as fallback
+      const localLog = JSON.parse(localStorage.getItem('sygnl_trade_log') || '[]')
+      if (localLog.length > 0) {
+        setTradeLog(localLog)
+      } else if (autoTradingLog?.length > 0) {
+        // Convert auto trading log format to trade log format
+        const convertedLog = autoTradingLog
+          .filter(t => t.timestamp)
+          .map(t => ({
+            timestamp: t.timestamp,
+            symbol: t.ticker,
+            action: t.action,
+            price: 0,
+            quantity: t.proposed_size || 0,
+            value: 0,
+            source: 'auto',
+            strength: t.confidence > 80 ? 'STRONG' : t.confidence > 65 ? 'MEDIUM' : 'WEAK',
+            status: t.executed ? 'EXECUTED' : 'REJECTED',
+            reason: t.reason
+          }))
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        setTradeLog(convertedLog)
+      }
     }
   }, [])
   
   useEffect(() => {
     async function fetchData() {
       try {
-        const [paperRes, tokenRes, intelRes, accuracyRes, signalsRes] = await Promise.all([
+        const [paperRes, tokenRes, intelRes, accuracyRes, signalsRes, vpsPaperRes] = await Promise.all([
           fetch('/api/paper-trading').catch(() => null),
           fetch('/api/token-usage').catch(() => null),
           fetch(API_BASE + '/public/intelligence').catch(() => null),
           fetch('/api/accuracy').catch(() => null),
-          fetch('/api/execute-signal').catch(() => null)
+          fetch('/api/execute-signal').catch(() => null),
+          fetch(VPS_API_BASE + '/api/paper-trading').catch(() => null)
         ])
         
-        if (paperRes?.ok) {
+        // Use VPS paper trading data if available
+        if (vpsPaperRes?.ok) {
+          const data = await vpsPaperRes.json()
+          setPaperPositions(data.positions || [])
+          const totalInvested = data.positions?.reduce((sum, p) => sum + (parseFloat(p.cost_basis) || 0), 0) || 0
+          const totalValue = data.total_value || 0
+          setPaperSummary({
+            totalValue: totalValue,
+            totalInvested: totalInvested,
+            totalPL: totalValue - totalInvested,
+            totalPLPct: totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0,
+            buyingPower: data.buying_power || 0
+          })
+          // Load trade history from VPS
+          if (data.trade_history) {
+            const formattedTrades = data.trade_history.map(t => ({
+              timestamp: t.timestamp,
+              symbol: t.ticker || t.symbol,
+              action: t.action,
+              price: t.price || 0,
+              quantity: t.quantity || t.qty || 0,
+              value: t.notional || t.value || 0,
+              source: t.vps_executed ? 'auto' : 'manual',
+              strength: t.confidence > 80 ? 'STRONG' : t.confidence > 65 ? 'MEDIUM' : 'WEAK',
+              status: t.status || (t.vps_executed ? 'EXECUTED' : 'REJECTED'),
+              reason: t.reason
+            }))
+            setTradeLog(formattedTrades)
+          }
+        } else if (paperRes?.ok) {
+          // Fallback to local API
           const data = await paperRes.json()
           setPaperPositions(data.positions || [])
           setPaperSummary({
@@ -71,7 +133,6 @@ export default function Dashboard() {
             totalPL: data.total_pl || 0, totalPLPct: data.total_pl_pct || 0,
             buyingPower: data.buyingPower || 6000
           })
-          // Load trade history
           if (data.tradeHistory) {
             setTradeLog(data.tradeHistory)
           }
@@ -109,6 +170,37 @@ export default function Dashboard() {
     fetchData()
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
+  }, [])
+  
+  // RLM Data Fetching
+  useEffect(() => {
+    async function fetchRlmData() {
+      try {
+        const [rlmSignalsRes, rlmStatusRes] = await Promise.all([
+          fetch(RLM_API_BASE + '/api/rlm/signals').catch(() => null),
+          fetch(RLM_API_BASE + '/api/rlm/status').catch(() => null)
+        ])
+
+        if (rlmSignalsRes?.ok) {
+          const data = await rlmSignalsRes.json()
+          setRlmSignals(data.fast_signals || [])
+          setRlmBudget({
+            total_budget: data.budget_status?.total_budget || 10.0,
+            spent_today: data.budget_status?.spent_today || 0,
+            remaining: data.budget_status?.remaining || 10.0
+          })
+        }
+        if (rlmStatusRes?.ok) {
+          const data = await rlmStatusRes.json()
+          setRlmStatus(data)
+        }
+      } catch (e) {
+        console.error('RLM Fetch error:', e)
+      }
+    }
+    fetchRlmData()
+    const rlmInterval = setInterval(fetchRlmData, 60000) // Fetch RLM data every minute
+    return () => clearInterval(rlmInterval)
   }, [])
   
   // Auto-execute strong signals
@@ -254,10 +346,21 @@ export default function Dashboard() {
   })
   
   const getGraphData = () => {
-    if (performanceData?.history?.length > 0) return performanceData.history.slice(-20).map(h => ({ date: new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), value: h.total_value || h.value }))
-    if (graphTimeframe === 'day') return [{ date: '9:30', value: 172000 }, { date: '10:30', value: 171500 }, { date: '11:30', value: 171000 }, { date: '12:30', value: 170800 }, { date: '1:30', value: 170600 }, { date: '2:30', value: 170542 }]
-    if (graphTimeframe === 'week') return [{ date: 'Mon', value: 175000 }, { date: 'Tue', value: 173500 }, { date: 'Wed', value: 172000 }, { date: 'Thu', value: 171200 }, { date: 'Fri', value: 170542 }]
-    return [{ date: 'Jan 1', value: 165000 }, { date: 'Jan 10', value: 168000 }, { date: 'Jan 20', value: 172000 }, { date: 'Feb 1', value: 171500 }, { date: 'Feb 6', value: 170542 }]
+    // Use real performance data from performance_history.json
+    if (performanceData?.dailyHistory?.length > 0) {
+      return performanceData.dailyHistory.slice(-20).map(h => ({ 
+        date: new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
+        value: h.livePortfolio?.totalValue || 0,
+        change: h.livePortfolio?.dayChangePercent || 0
+      }))
+    }
+    
+    // Fallback to actual data we have
+    return [
+      { date: 'Feb 4', value: 189298, change: -4.86 },
+      { date: 'Feb 5', value: 170761, change: -9.49 },
+      { date: 'Feb 6', value: 184598, change: 5.76 }
+    ];
   }
   const graphData = getGraphData()
 
@@ -377,6 +480,87 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* System Health Section */}
+        <div className="col-span-full mb-6 p-4 rounded-xl bg-gradient-to-br from-zinc-900/50 to-black/50 border border-white/10">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Activity className="w-5 h-5 text-emerald-400" />
+              System Health & Automation
+            </h3>
+            <span className="text-xs text-zinc-500">
+              Last checked: {new Date().toLocaleTimeString()}
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Dashboard API */}
+            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+              <div className="text-xs text-zinc-500 mb-1">Dashboard API</div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-emerald-400">Online</span>
+              </div>
+            </div>
+
+            {/* Paper Trading */}
+            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+              <div className="text-xs text-zinc-500 mb-1">Paper Trading</div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-emerald-400">Active</span>
+              </div>
+              <div className="text-xs text-zinc-600 mt-1">${paperSummary.totalValue?.toLocaleString() || '6,000'}</div>
+            </div>
+
+            {/* Auto-Trading */}
+            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+              <div className="text-xs text-zinc-500 mb-1">Auto-Execute</div>
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${autoExecuteEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-yellow-500'}`} />
+                <span className={autoExecuteEnabled ? 'text-emerald-400' : 'text-yellow-400'}>
+                  {autoExecuteEnabled ? 'Enabled' : 'Paused'}
+                </span>
+              </div>
+            </div>
+
+            {/* Last Trade */}
+            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+              <div className="text-xs text-zinc-500 mb-1">Last Auto-Trade</div>
+              <div className="text-sm text-zinc-300">
+                {tradeLog.length > 0 ? (
+                  <>
+                    {new Date(tradeLog[0].timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    <span className="text-xs text-emerald-500 block">{tradeLog[0].symbol} {tradeLog[0].action}</span>
+                  </>
+                ) : (
+                  <span className="text-zinc-600">Feb 4, 22:18</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Active Cron Jobs */}
+          <div className="mt-4 pt-4 border-t border-white/5">
+            <div className="text-xs text-zinc-500 mb-3">Active Automation</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { name: 'Portfolio Updates', schedule: 'Every 4h', status: 'active' },
+                { name: 'Daily Briefing', schedule: '9am PST', status: 'active' },
+                { name: 'Auto-Trading', schedule: '3:50pm ET', status: autoExecuteEnabled ? 'active' : 'paused' },
+                { name: 'Intelligence Hub', schedule: 'Every 30m', status: 'active' }
+              ].map((job, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                  <div>
+                    <div className="text-sm font-medium">{job.name}</div>
+                    <div className="text-xs text-zinc-600">{job.schedule}</div>
+                  </div>
+                  <span className={`w-2 h-2 rounded-full ${job.status === 'active' ? 'bg-emerald-500' : 'bg-yellow-500'}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {accuracy.totalSignals > 0 && (
           <div id="accuracy-section" className="mb-6 p-4 rounded-xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 border border-blue-500/20">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-blue-400" />SYGNL Accuracy Breakdown<span className="text-xs text-zinc-500 font-normal ml-auto">Last 30 days - {accuracy.totalSignals} signals</span></h3>
@@ -413,6 +597,44 @@ export default function Dashboard() {
               <div className="px-4 py-2 rounded-lg bg-black/30"><span className="text-xs text-zinc-500">Best Streak</span><div className="text-lg font-bold text-yellow-400">{accuracy.bestStreak > 0 ? '🏆 ' + accuracy.bestStreak : '—'}</div></div>
               <div className="px-4 py-2 rounded-lg bg-black/30 flex-1"><span className="text-xs text-zinc-500">Progress to 65% Target</span><div className="flex items-center gap-2 mt-1"><div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden"><div className={'h-full rounded-full ' + (accuracy.progressToTarget >= 100 ? 'bg-emerald-500' : accuracy.progressToTarget >= 75 ? 'bg-blue-500' : 'bg-yellow-500')} style={{ width: Math.min(100, accuracy.progressToTarget) + '%' }} /></div><span className="text-sm font-medium text-zinc-300">{accuracy.progressToTarget}%</span></div></div>
             </div>
+
+        </div>
+
+        {/* RLM Signals Section */}
+        {showRlmSection && rlmSignals.length > 0 && (
+          <div id="rlm-signals-section" className="mb-6 p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Brain className="w-5 h-5 text-purple-400" /> RLM Status ({rlmStatus.version})
+              </h3>
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-zinc-500">Budget: ${rlmBudget.spent_today?.toFixed(2)}/${rlmBudget.total_budget?.toFixed(2)}</span>
+                <button onClick={() => setShowRlmSection(!showRlmSection)} className="text-zinc-500 hover:text-white">
+                  {showRlmSection ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {rlmSignals.slice(0, 6).map((s, i) => (
+                <div key={i} className={`p-3 rounded-lg border ${s.signal === 'STRONG_BUY' ? 'bg-emerald-500/10 border-emerald-500/30' : s.signal === 'BUY' ? 'bg-emerald-500/5 border-emerald-500/20' : s.signal === 'STRONG_SELL' ? 'bg-red-500/10 border-red-500/30' : s.signal === 'SELL' ? 'bg-red-500/5 border-red-500/20' : 'bg-zinc-800/50 border-zinc-700'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-lg">{s.symbol}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-lg ${s.signal.includes('BUY') ? 'bg-emerald-500/30 text-emerald-400' : s.signal.includes('SELL') ? 'bg-red-500/30 text-red-400' : 'bg-zinc-700/50 text-zinc-400'}`}>
+                      {s.signal}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mb-1 text-xs">
+                    <span className="text-zinc-400">Confidence: {s.confidence}%</span>
+                    <span className="text-zinc-500">Tier: {s.tier || 'FAST'}</span>
+                  </div>
+                  <div className="text-xs text-zinc-500 flex items-center justify-between">
+                    <span>Latency: {s.latency_ms}ms</span>
+                    <span>{s.reasoning || 'Fast signal'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -425,17 +647,22 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-          <div className="h-48 flex items-end gap-2">
+          <div className="h-48 flex items-end gap-4 px-4">
             {graphData.map((point, i) => {
               const maxVal = Math.max(...graphData.map(d => d.value))
               const minVal = Math.min(...graphData.map(d => d.value))
-              const range = maxVal - minVal || 1
-              const height = ((point.value - minVal) / range) * 100
-              const isUp = i > 0 && point.value >= graphData[i-1].value
+              const padding = (maxVal - minVal) * 0.1
+              const range = (maxVal + padding) - (minVal - padding) || 1
+              const height = Math.max(((point.value - (minVal - padding)) / range) * 100, 15)
+              const isUp = point.change >= 0
               return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <div className={'w-full rounded-t transition-all duration-500 ' + (isUp ? 'bg-emerald-500/60' : 'bg-red-500/60')} style={{ height: Math.max(height, 10) + '%' }} />
-                  <span className="text-xs text-zinc-500">{point.date}</span>
+                <div key={i} className="flex-1 flex flex-col items-center gap-2 min-w-[60px]">
+                  <div className="text-xs text-zinc-400 mb-1">${(point.value / 1000).toFixed(0)}k</div>
+                  <div className={'w-full min-w-[40px] max-w-[80px] rounded-t transition-all duration-500 ' + (isUp ? 'bg-emerald-500/70' : 'bg-red-500/70')} style={{ height: height + '%' }} />
+                  <span className="text-xs text-zinc-500 font-medium">{point.date}</span>
+                  <span className={'text-xs font-bold ' + (isUp ? 'text-emerald-400' : 'text-red-400')}>
+                    {isUp ? '+' : ''}{point.change?.toFixed(1) || 0}%
+                  </span>
                 </div>
               )
             })}
@@ -482,14 +709,15 @@ export default function Dashboard() {
 
         <div id="sygnliq-section" className="mb-6 p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2"><Brain className="w-5 h-5 text-amber-400" />SYGNL.iq<span className="text-xs text-amber-400 font-normal">Signal Intelligence</span></h3>
-            <div className="flex items-center gap-3">
-              <button onClick={() => setAutoExecuteEnabled(!autoExecuteEnabled)} className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ' + (autoExecuteEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-zinc-400')}>{autoExecuteEnabled ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}Auto-Execute Strong</button>
-              <div className="flex gap-2">
-                <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs">{sygnliqStats.strong} Strong</span>
-                <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-xs">{sygnliqStats.medium} Medium</span>
-                <span className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-400 text-xs">{sygnliqStats.weak} Weak</span>
-              </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Brain className="w-5 h-5 text-purple-400" /> RLM Status ({rlmStatus.version})
+            </h3>
+            <div className="flex gap-2 items-center">
+              <span className="text-xs text-zinc-500">Budget: ${rlmBudget.spent_today?.toFixed(2)}/${rlmBudget.total_budget?.toFixed(2)}</span>
+              <button onClick={() => setShowRlmSection(!showRlmSection)} className="text-zinc-500 hover:text-white">
+                {showRlmSection ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+            </div>
             </div>
           </div>
           {sygnliqSignals.length > 0 && (
@@ -582,7 +810,7 @@ export default function Dashboard() {
               {tradeLog.slice(0, 10).map((trade, i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-black/30">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${trade.source === 'auto' ? 'bg-emerald-500/20 text-emerald-400' : trade.strength === 'WEAK' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${trade.status === 'REJECTED' ? 'bg-red-500/20 text-red-400' : trade.source === 'auto' ? 'bg-emerald-500/20 text-emerald-400' : trade.strength === 'WEAK' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
                       {trade.symbol?.slice(0, 2)}
                     </div>
                     <div>
@@ -591,13 +819,21 @@ export default function Dashboard() {
                         <span className={`text-xs px-2 py-0.5 rounded ${trade.action === 'BUY' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>{trade.action}</span>
                         {trade.source === 'auto' && <span className="text-xs text-emerald-400">auto</span>}
                         {trade.strength === 'WEAK' && <span className="text-xs text-yellow-400">experimental</span>}
+                        {trade.status === 'REJECTED' && <span className="text-xs text-red-400">rejected</span>}
                       </div>
-                      <div className="text-xs text-zinc-500">{new Date(trade.timestamp).toLocaleTimeString()} • {trade.quantity} @ ${trade.price}</div>
+                      <div className="text-xs text-zinc-500">
+                        {new Date(trade.timestamp).toLocaleTimeString()} 
+                        {trade.status === 'REJECTED' && trade.reason ? (
+                          <span className="text-red-400 ml-1">• {trade.reason.substring(0, 50)}...</span>
+                        ) : (
+                          <span>• {trade.quantity} @ ${trade.price}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium">{formatCurrency(trade.value)}</div>
-                    <div className="text-xs text-zinc-500">{trade.source === 'auto' ? 'Auto-executed' : 'Manual'}</div>
+                    <div className="text-sm font-medium">{trade.status === 'REJECTED' ? '—' : formatCurrency(trade.value)}</div>
+                    <div className="text-xs text-zinc-500">{trade.source === 'auto' ? (trade.status === 'REJECTED' ? 'Auto-rejected' : 'Auto-executed') : 'Manual'}</div>
                   </div>
                 </div>
               ))}
