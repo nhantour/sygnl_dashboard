@@ -1,53 +1,41 @@
-// SYGNL Signal Accuracy Tracking API
+// SYGNL Signal Accuracy Tracking API - Uses SQLite
+import { getSignals, saveSignals, seedFromJsonFiles } from '../lib/db.js'
 import fs from 'fs'
 import path from 'path'
 
-const DATA_FILE = path.join(process.cwd(), 'data', 'signal_accuracy.json')
-
-// Ensure data file exists
-function ensureDataFile() {
-  if (!fs.existsSync(DATA_FILE)) {
-    const initialData = {
-      signals: [],
-      accuracy: {
-        overall: 0,
-        byConfidence: {
-          '80-100': { total: 0, wins: 0, accuracy: 0 },
-          '65-79': { total: 0, wins: 0, accuracy: 0 },
-          '50-64': { total: 0, wins: 0, accuracy: 0 },
-          'below50': { total: 0, wins: 0, accuracy: 0 }
-        },
-        byState: {
-          'Building': { total: 0, wins: 0, accuracy: 0 },
-          'Clear': { total: 0, wins: 0, accuracy: 0 },
-          'Fragile': { total: 0, wins: 0, accuracy: 0 },
-          'Break': { total: 0, wins: 0, accuracy: 0 },
-          'Crowded': { total: 0, wins: 0, accuracy: 0 }
-        }
-      },
-      lastUpdated: new Date().toISOString(),
-      targetAccuracy: 65,
-      currentStreak: 0,
-      bestStreak: 0
-    }
-    fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true })
-    fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2))
-    return initialData
-  }
-  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))
-}
-
 // Calculate accuracy from signal history
-function calculateAccuracy(data) {
+function calculateAccuracy(signals) {
   const now = new Date()
   const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000)
   
   // Filter signals from last 30 days with outcomes
-  const recentSignals = data.signals.filter(s => 
-    new Date(s.timestamp) > thirtyDaysAgo && s.outcome !== undefined
+  const recentSignals = signals.filter(s => 
+    new Date(s.timestamp) > thirtyDaysAgo && s.outcome !== undefined && s.outcome !== null
   )
   
-  if (recentSignals.length === 0) return data.accuracy
+  if (recentSignals.length === 0) {
+    return {
+      overall: 0,
+      totalSignals: 0,
+      wins: 0,
+      losses: 0,
+      byConfidence: {
+        '80-100': { total: 0, wins: 0, accuracy: 0 },
+        '65-79': { total: 0, wins: 0, accuracy: 0 },
+        '50-64': { total: 0, wins: 0, accuracy: 0 },
+        'below50': { total: 0, wins: 0, accuracy: 0 }
+      },
+      byState: {
+        'Building': { total: 0, wins: 0, accuracy: 0 },
+        'Clear': { total: 0, wins: 0, accuracy: 0 },
+        'Fragile': { total: 0, wins: 0, accuracy: 0 },
+        'Break': { total: 0, wins: 0, accuracy: 0 },
+        'Crowded': { total: 0, wins: 0, accuracy: 0 }
+      },
+      currentStreak: 0,
+      bestStreak: 0
+    }
+  }
   
   const wins = recentSignals.filter(s => s.outcome === 'win').length
   const overall = Math.round((wins / recentSignals.length) * 100)
@@ -85,9 +73,9 @@ function calculateAccuracy(data) {
   }
   
   recentSignals.forEach(s => {
-    if (byState[s.marketState]) {
-      byState[s.marketState].total++
-      if (s.outcome === 'win') byState[s.marketState].wins++
+    if (byState[s.market_state]) {
+      byState[s.market_state].total++
+      if (s.outcome === 'win') byState[s.market_state].wins++
     }
   })
   
@@ -139,11 +127,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const data = ensureDataFile()
-    
+    // Seed DB on first request if empty
+    await seedFromJsonFiles()
+
     if (req.method === 'GET') {
-      // Return current accuracy metrics
-      const accuracy = calculateAccuracy(data)
+      // Get signals from database
+      let signals = await getSignals()
+      
+      // If no signals in DB, try JSON file
+      if (!signals || signals.length === 0) {
+        const accuracyPath = path.join(process.cwd(), 'data', 'signal_accuracy.json')
+        if (fs.existsSync(accuracyPath)) {
+          const data = JSON.parse(fs.readFileSync(accuracyPath, 'utf8'))
+          signals = data.signals || []
+          // Save to DB for next time
+          await saveSignals(signals)
+        }
+      }
+      
+      const accuracy = calculateAccuracy(signals)
+      
       res.status(200).json({
         ...accuracy,
         targetAccuracy: 65,
@@ -159,25 +162,29 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing required fields' })
       }
       
-      data.signals.push({
+      const newSignal = {
         id: `${symbol}-${Date.now()}`,
         symbol,
         action,
         confidence: confidence || 0,
-        marketState: marketState || 'Unknown',
+        market_state: marketState || 'Unknown',
         outcome,
         pnl: pnl || 0,
         timestamp: new Date().toISOString()
-      })
-      
-      // Keep only last 500 signals
-      if (data.signals.length > 500) {
-        data.signals = data.signals.slice(-500)
       }
       
-      fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2))
+      // Get existing and add new
+      const existing = await getSignals()
+      const signals = existing || []
+      signals.unshift(newSignal)
       
-      const accuracy = calculateAccuracy(data)
+      // Keep only last 500 signals
+      if (signals.length > 500) signals.pop()
+      
+      await saveSignals(signals)
+      
+      const accuracy = calculateAccuracy(signals)
+      
       res.status(200).json({
         message: 'Signal recorded',
         ...accuracy,

@@ -1,27 +1,22 @@
-// Live Holdings API - Supports manual buy/sell for real portfolio
-import fs from 'fs'
-import path from 'path'
+// Live Holdings API - Uses SQLite for persistence
+import { getHoldings, saveHoldings, seedFromJsonFiles } from '../lib/db.js'
 
-const HOLDINGS_FILE = path.join(process.cwd(), 'data', 'holdings.json')
-
-// Ensure file exists
-function ensureHoldingsFile() {
-  if (!fs.existsSync(HOLDINGS_FILE)) {
-    const initialData = {
-      lastUpdated: new Date().toISOString(),
-      btcPrice: 60000,
-      totalValue: 0,
-      dayChange: 0,
-      dayChangePercent: 0,
-      holdings: [],
-      allocationByType: {},
-      btcTotal: 0
-    }
-    fs.mkdirSync(path.dirname(HOLDINGS_FILE), { recursive: true })
-    fs.writeFileSync(HOLDINGS_FILE, JSON.stringify(initialData, null, 2))
-    return initialData
-  }
-  return JSON.parse(fs.readFileSync(HOLDINGS_FILE, 'utf8'))
+const COMPANY_NAMES = {
+  'PLTR': 'Palantir Technologies',
+  'TSLA': 'Tesla Inc',
+  'NVDA': 'NVIDIA Corporation',
+  'MSTR': 'MicroStrategy Inc',
+  'VOO': 'Vanguard S&P 500 ETF',
+  'BTC': 'Bitcoin',
+  'ETH': 'Ethereum',
+  'AAPL': 'Apple Inc',
+  'MSFT': 'Microsoft Corp',
+  'AMD': 'Advanced Micro Devices',
+  'META': 'Meta Platforms',
+  'GOOGL': 'Alphabet Inc',
+  'AMZN': 'Amazon.com Inc',
+  'NFLX': 'Netflix Inc',
+  'CRM': 'Salesforce Inc'
 }
 
 export default async function handler(req, res) {
@@ -35,6 +30,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Seed DB on first request if empty
+    await seedFromJsonFiles()
+
     if (req.method === 'GET') {
       // Try to fetch from live API first
       try {
@@ -45,17 +43,30 @@ export default async function handler(req, res) {
         
         if (apiRes.ok) {
           const data = await apiRes.json()
-          // Save to local file
-          fs.writeFileSync(HOLDINGS_FILE, JSON.stringify(data, null, 2))
+          // Save to database
+          await saveHoldings(data)
           return res.status(200).json(data)
         }
       } catch (e) {
-        console.log('Live holdings API unavailable, using local data:', e.message)
+        console.log('Live holdings API unavailable, using DB data:', e.message)
       }
       
-      // Return local data
-      const data = ensureHoldingsFile()
-      res.status(200).json(data)
+      // Return DB data
+      const data = await getHoldings()
+      if (data) {
+        res.status(200).json(data)
+      } else {
+        res.status(200).json({
+          lastUpdated: new Date().toISOString(),
+          btcPrice: 60000,
+          totalValue: 0,
+          dayChange: 0,
+          dayChangePercent: 0,
+          holdings: [],
+          allocationByType: {},
+          btcTotal: 0
+        })
+      }
       
     } else if (req.method === 'POST') {
       // Execute live trade
@@ -65,7 +76,8 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing required fields: symbol, quantity, price, action' })
       }
       
-      const data = ensureHoldingsFile()
+      // Get current holdings
+      let data = await getHoldings() || { holdings: [], totalValue: 0 }
       const qty = parseFloat(quantity)
       const prc = parseFloat(price)
       const value = qty * prc
@@ -73,7 +85,7 @@ export default async function handler(req, res) {
       if (!data.holdings) data.holdings = []
       
       if (action === 'BUY' || action === 'ADD') {
-        // Check for existing non-wallet position (live trades don't have wallet)
+        // Check for existing non-wallet position
         const existingIdx = data.holdings.findIndex(h => 
           h.symbol === symbol.toUpperCase() && !h.wallet
         )
@@ -106,7 +118,7 @@ export default async function handler(req, res) {
             day_change_pct: 0,
             allocation_pct: 0,
             type: type,
-            lastUpdated: new Date().toISOString()
+            last_updated: new Date().toISOString()
           })
         }
         
@@ -156,14 +168,8 @@ export default async function handler(req, res) {
         h.allocation_pct = data.totalValue > 0 ? ((h.current_value || 0) / data.totalValue) * 100 : 0
       })
       
-      // Update allocation by type
-      data.allocationByType = data.holdings.reduce((acc, h) => {
-        const type = h.type || 'Equity'
-        acc[type] = (acc[type] || 0) + (h.current_value || 0)
-        return acc
-      }, {})
-      
-      fs.writeFileSync(HOLDINGS_FILE, JSON.stringify(data, null, 2))
+      // Save to database
+      await saveHoldings(data)
       
       res.status(200).json({
         success: true,
@@ -187,22 +193,4 @@ export default async function handler(req, res) {
     console.error('Holdings API error:', error)
     res.status(500).json({ error: error.message || 'Internal server error' })
   }
-}
-
-const COMPANY_NAMES = {
-  'PLTR': 'Palantir Technologies',
-  'TSLA': 'Tesla Inc',
-  'NVDA': 'NVIDIA Corporation',
-  'MSTR': 'MicroStrategy Inc',
-  'VOO': 'Vanguard S&P 500 ETF',
-  'BTC': 'Bitcoin',
-  'ETH': 'Ethereum',
-  'AAPL': 'Apple Inc',
-  'MSFT': 'Microsoft Corp',
-  'AMD': 'Advanced Micro Devices',
-  'META': 'Meta Platforms',
-  'GOOGL': 'Alphabet Inc',
-  'AMZN': 'Amazon.com Inc',
-  'NFLX': 'Netflix Inc',
-  'CRM': 'Salesforce Inc'
 }

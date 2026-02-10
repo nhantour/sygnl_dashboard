@@ -1,11 +1,7 @@
-// SYGNL Stats API - Returns dashboard statistics
+// SYGNL Stats API - Uses SQLite for aggregation
+import { getHoldings, getIntelligence, getSignals, seedFromJsonFiles } from '../lib/db.js'
 import fs from 'fs'
 import path from 'path'
-
-const HOLDINGS_FILE = path.join(process.cwd(), 'data', 'holdings.json')
-const COSTS_FILE = path.join(process.cwd(), 'data', 'costs.json')
-const ACCURACY_FILE = path.join(process.cwd(), 'data', 'signal_accuracy.json')
-const TOKEN_FILE = path.join(process.cwd(), '..', 'sygnl', 'token_usage_log.json')
 
 // Read file with fallback
 function readJsonFile(filePath, fallback = {}) {
@@ -30,52 +26,58 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Load data from files
-    const holdings = readJsonFile(HOLDINGS_FILE, { totalValue: 0, dayChange: 0, holdings: [] })
-    const costs = readJsonFile(COSTS_FILE, [])
-    const accuracy = readJsonFile(ACCURACY_FILE, { accuracy: { overall: 0 } })
+    // Seed DB on first request if empty
+    await seedFromJsonFiles()
+
+    // Load data from database
+    const holdings = await getHoldings()
+    const intelligence = await getIntelligence()
+    const signals = await getSignals()
     
     // Calculate portfolio stats
-    const portfolioValue = holdings.totalValue || 0
-    const dayChange = holdings.dayChange || 0
-    const dayChangePercent = holdings.dayChangePercent || 0
+    const portfolioValue = holdings?.totalValue || 0
+    const dayChange = holdings?.dayChange || 0
+    const dayChangePercent = holdings?.dayChangePercent || 0
     
     // Count holdings by type
-    const cryptoValue = holdings.holdings?.filter(h => h.type === 'Crypto').reduce((sum, h) => sum + (h.current_value || 0), 0) || 0
-    const stocksValue = holdings.holdings?.filter(h => h.type === 'Equity').reduce((sum, h) => sum + (h.current_value || 0), 0) || 0
-    const etfValue = holdings.holdings?.filter(h => h.type === 'ETF').reduce((sum, h) => sum + (h.current_value || 0), 0) || 0
+    const cryptoValue = holdings?.holdings?.filter(h => h.type === 'Crypto').reduce((sum, h) => sum + (h.current_value || 0), 0) || 0
+    const stocksValue = holdings?.holdings?.filter(h => h.type === 'Equity').reduce((sum, h) => sum + (h.current_value || 0), 0) || 0
+    const etfValue = holdings?.holdings?.filter(h => h.type === 'ETF').reduce((sum, h) => sum + (h.current_value || 0), 0) || 0
     
-    // Calculate costs - handle both array format and object format
+    // Calculate costs - try token usage file
     const today = new Date().toISOString().split('T')[0]
     let todayCost = 0
     
-    if (Array.isArray(costs)) {
-      // Old format: array of daily costs
-      const todayEntry = costs.find(c => c.date === today)
-      todayCost = todayEntry?.cost || 0
-    } else {
-      // New format: object with today property
-      todayCost = costs.today || 0
-    }
-    
-    // Also try to get from token usage log
     try {
-      const tokenLogs = readJsonFile(TOKEN_FILE, [])
-      const todayLogs = tokenLogs.filter(t => t.date === today)
-      const tokenCost = todayLogs.reduce((sum, t) => sum + (t.cost_usd || 0), 0)
-      if (tokenCost > todayCost) todayCost = tokenCost
+      const tokenPath = path.join(process.cwd(), '..', 'sygnl', 'token_usage_log.json')
+      if (fs.existsSync(tokenPath)) {
+        const tokenLogs = readJsonFile(tokenPath, [])
+        const todayLogs = tokenLogs.filter(t => t.date === today)
+        todayCost = todayLogs.reduce((sum, t) => sum + (t.cost_usd || 0), 0)
+      }
     } catch (e) {}
     
+    // Calculate accuracy from signals
+    const recentSignals = signals?.filter(s => {
+      const signalDate = new Date(s.timestamp)
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      return signalDate > thirtyDaysAgo && s.outcome
+    }) || []
+    
+    const wins = recentSignals.filter(s => s.outcome === 'win').length
+    const accuracyOverall = recentSignals.length > 0 ? Math.round((wins / recentSignals.length) * 100) : 0
+    
     // Calculate allocation percentages
-    const totalValue = portfolioValue || 1  // Avoid division by zero
+    const totalValue = portfolioValue || 1
+    
     const stats = {
       portfolio: {
         totalValue: portfolioValue,
         dayChange: dayChange,
         dayChangePercent: dayChangePercent,
-        btcPrice: holdings.btcPrice || 0,
-        btcTotal: holdings.btcTotal || 0,
-        holdings: holdings.holdings?.length || 0,
+        btcPrice: holdings?.btcPrice || 0,
+        btcTotal: holdings?.btcTotal || 0,
+        holdings: holdings?.holdings?.length || 0,
         allocation: {
           crypto: { value: cryptoValue, percent: (cryptoValue / totalValue * 100).toFixed(1) },
           stocks: { value: stocksValue, percent: (stocksValue / totalValue * 100).toFixed(1) },
@@ -88,9 +90,13 @@ export default async function handler(req, res) {
         percentUsed: ((todayCost / 10) * 100).toFixed(1)
       },
       accuracy: {
-        overall: accuracy.accuracy?.overall || 0,
+        overall: accuracyOverall,
         target: 65,
-        targetProgress: accuracy.accuracy?.overall ? Math.min(100, (accuracy.accuracy.overall / 65 * 100)).toFixed(1) : 0
+        targetProgress: accuracyOverall ? Math.min(100, (accuracyOverall / 65 * 100)).toFixed(1) : 0
+      },
+      intelligence: {
+        totalItems: intelligence?.items?.length || 0,
+        highPriority: intelligence?.items?.filter(i => i.priority === 'high').length || 0
       },
       lastUpdated: new Date().toISOString()
     }
