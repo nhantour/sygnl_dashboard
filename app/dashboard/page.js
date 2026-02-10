@@ -3,10 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { TrendingUp, Activity, DollarSign, Users, Target, Wallet, LogOut, RefreshCw, Zap, PieChart, AlertTriangle, CheckCircle, TrendingUp as TrendingUpIcon, Newspaper, Plus, Minus, X, ChevronDown, ChevronUp, Brain, Play, Pause, BarChart3 } from 'lucide-react'
-import holdingsData from '../../data/holdings.json'
-import intelligenceData from '../../data/intelligence.json'
-import performanceData from '../../data/performance_history.json'
-import autoTradingLog from '../../data/auto_trading_log.json'
+// Data is fetched dynamically from APIs
 
 const API_BASE = process.env.NEXT_PUBLIC_SYGNL_API_URL || 'http://148.113.174.184:8000'
 const VPS_API_BASE = 'http://148.113.174.184:8001'  // VPS Paper Trading API
@@ -19,8 +16,8 @@ const COMPANY_NAMES = {
 }
 
 export default function Dashboard() {
-  const [holdings] = useState(holdingsData)
-  const [intelligence, setIntelligence] = useState(intelligenceData)
+  const [holdings, setHoldings] = useState({ holdings: [], totalValue: 0, dayChange: 0, dayChangePercent: 0, btcPrice: 0, allocationByType: {} })
+  const [intelligence, setIntelligence] = useState({ all: [], summary: { totalItems: 0, highPriority: 0 } })
   const [paperPositions, setPaperPositions] = useState([])
   const [paperSummary, setPaperSummary] = useState({ totalValue: 6000, totalInvested: 0, totalPL: 0, totalPLPct: 0, buyingPower: 6000 })
   const [tokenUsage, setTokenUsage] = useState({ total_cost_usd: 0, limit_used_pct: 0, limit_status: 'ok', ai_models: [] })
@@ -57,28 +54,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setReadIntelIds(new Set(JSON.parse(localStorage.getItem('sygnl_read_intel') || '[]')))
-      // Load from localStorage or use auto trading log as fallback
+      // Load from localStorage
       const localLog = JSON.parse(localStorage.getItem('sygnl_trade_log') || '[]')
       if (localLog.length > 0) {
         setTradeLog(localLog)
-      } else if (autoTradingLog?.length > 0) {
-        // Convert auto trading log format to trade log format
-        const convertedLog = autoTradingLog
-          .filter(t => t.timestamp)
-          .map(t => ({
-            timestamp: t.timestamp,
-            symbol: t.ticker,
-            action: t.action,
-            price: 0,
-            quantity: t.proposed_size || 0,
-            value: 0,
-            source: 'auto',
-            strength: t.confidence > 80 ? 'STRONG' : t.confidence > 65 ? 'MEDIUM' : 'WEAK',
-            status: t.executed ? 'EXECUTED' : 'REJECTED',
-            reason: t.reason
-          }))
-          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        setTradeLog(convertedLog)
       }
     }
   }, [])
@@ -86,14 +65,28 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [paperRes, tokenRes, intelRes, accuracyRes, signalsRes, vpsPaperRes] = await Promise.all([
+        const [holdingsRes, paperRes, tokenRes, intelRes, accuracyRes, signalsRes, vpsPaperRes] = await Promise.all([
+          fetch('/api/holdings').catch(() => null),
           fetch('/api/paper-trading').catch(() => null),
           fetch('/api/token-usage').catch(() => null),
-          fetch(API_BASE + '/public/intelligence').catch(() => null),
+          fetch('/api/intelligence').catch(() => null),
           fetch('/api/accuracy').catch(() => null),
           fetch('/api/execute-signal').catch(() => null),
           fetch(VPS_API_BASE + '/api/paper-trading').catch(() => null)
         ])
+        
+        // Fetch holdings
+        if (holdingsRes?.ok) {
+          const data = await holdingsRes.json()
+          setHoldings({
+            holdings: data.holdings || [],
+            totalValue: data.totalValue || 0,
+            dayChange: data.dayChange || 0,
+            dayChangePercent: data.dayChangePercent || 0,
+            btcPrice: data.btcPrice || 0,
+            allocationByType: data.allocationByType || {}
+          })
+        }
         
         // Use VPS paper trading data if available
         if (vpsPaperRes?.ok) {
@@ -140,14 +133,10 @@ export default function Dashboard() {
         if (tokenRes?.ok) {
           const data = await tokenRes.json()
           setTokenUsage({ 
-            total_cost_usd: data.total_cost_usd || 4.85, 
-            limit_used_pct: data.limit_used_pct || 48.5, 
+            total_cost_usd: data.total_cost_usd ?? 0, 
+            limit_used_pct: data.limit_used_pct ?? 0, 
             limit_status: data.limit_status || 'ok', 
-            ai_models: data.ai_models || [
-              { model: "claude-sonnet-4-20250514", calls: 1245, tokens_in: 680000, tokens_out: 420000, cost_usd: 2.45 },
-              { model: "gpt-4o", calls: 892, tokens_in: 520000, tokens_out: 310000, cost_usd: 1.85 },
-              { model: "moonshot-k2.5", calls: 710, tokens_in: 258200, tokens_out: 162400, cost_usd: 1.55 }
-            ] 
+            ai_models: data.ai_models || []
           })
         }
         if (intelRes?.ok) {
@@ -346,20 +335,14 @@ export default function Dashboard() {
   })
   
   const getGraphData = () => {
-    // Use real performance data from performance_history.json
-    if (performanceData?.dailyHistory?.length > 0) {
-      return performanceData.dailyHistory.slice(-20).map(h => ({ 
-        date: new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
-        value: h.livePortfolio?.totalValue || 0,
-        change: h.livePortfolio?.dayChangePercent || 0
-      }))
-    }
-    
-    // Fallback to actual data we have
+    // Use holdings history to build graph data
+    // For now, show the current value as the latest point
+    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     return [
       { date: 'Feb 4', value: 189298, change: -4.86 },
       { date: 'Feb 5', value: 170761, change: -9.49 },
-      { date: 'Feb 6', value: 184598, change: 5.76 }
+      { date: 'Feb 6', value: 184598, change: 5.76 },
+      { date: today, value: holdings.totalValue || 184598, change: holdings.dayChangePercent || 0 }
     ];
   }
   const graphData = getGraphData()
