@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-02-10T14:07:59.761757",
+  "current_accuracy": 83.87,
+  "target_accuracy": 70.0,
+  "gap_to_target": -13.870000000000005,
+  "by_tier": {
+    "fast": {
+      "total": 48,
+      "wins": 48,
+      "accuracy": 100.0
+    },
+    "validated": {
+      "total": 14,
+      "wins": 4,
+      "accuracy": 28.57
+    }
+  },
+  "files_analyzed": 2,
+  "iteration": 0
+}
