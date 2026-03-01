@@ -1,0 +1,2090 @@
+// SYGNL Paper Trading Command Center v2.0 — Dark Luxe Edition
+'use client'
+
+const N = (v) => Number(v) || 0
+
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { TrendingUp, Activity, Target, Zap, BarChart3, RefreshCw, ChevronDown, ChevronUp, ChevronRight, Trophy, AlertTriangle, CheckCircle, Clock, DollarSign, ArrowUpRight, ArrowDownRight, Flame, Shield, Eye, Cpu, Globe, Radio, Brain, AlertCircle, XCircle, Layers, Crosshair } from 'lucide-react'
+
+const PAPER_API = 'http://localhost:3002'
+const GLOBAL_API = 'http://localhost:3001'
+
+const fmt$ = (v) => {
+  const n = N(v)
+  const prefix = n >= 0 ? '+' : '-'
+  return prefix + '$' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+const fmtPct = (v) => {
+  const n = N(v)
+  return (n >= 0 ? '+' : '') + n.toFixed(2) + '%'
+}
+
+// Helper: format duration from minutes to human readable
+const fmtDuration = (minutes) => {
+  if (!minutes || minutes <= 0) return '—'
+  const hrs = Math.floor(minutes / 60)
+  const mins = Math.floor(minutes % 60)
+  if (hrs > 0) return `${hrs}h ${mins}m`
+  return `${mins}m`
+}
+
+// Helper: calculate time remaining until expiration/target
+const fmtTimeRemaining = (targetDate) => {
+  if (!targetDate) return '—'
+  const target = new Date(targetDate)
+  const now = new Date()
+  const diffMs = target - now
+  if (diffMs <= 0) return 'Expired'
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHrs = Math.floor(diffMins / 60)
+  const days = Math.floor(diffHrs / 24)
+  const hrs = diffHrs % 24
+  const mins = diffMins % 60
+  if (days > 0) return `${days}d ${hrs}h remaining`
+  if (hrs > 0) return `${hrs}h ${mins}m remaining`
+  return `${mins}m remaining`
+}
+
+// Helper: get duration color based on time remaining
+const getTimeColor = (targetDate) => {
+  if (!targetDate) return 'text-zinc-500'
+  const target = new Date(targetDate)
+  const now = new Date()
+  const diffMs = target - now
+  const diffHrs = diffMs / 3600000
+  if (diffMs <= 0) return 'text-red-400'
+  if (diffHrs <= 24) return 'text-amber-400'
+  if (diffHrs <= 72) return 'text-yellow-400'
+  return 'text-emerald-400'
+}
+
+// Helper: check US market hours (9:30AM-4PM ET)
+const getMarketStatus = (globalData) => {
+  if (!globalData || !globalData.coverage) return { open: false, label: 'Global data unavailable' }
+  const currentlyOpen = globalData.coverage.currently_open || 0
+  if (currentlyOpen > 0) return { open: true, label: `${currentlyOpen} exchange${currentlyOpen !== 1 ? 's' : ''} active` }
+  
+  // Fallback to US market hours if no global markets are open or data is missing
+  const now = new Date()
+  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }))
+  const h = et.getHours()
+  const m = et.getMinutes()
+  const day = et.getDay()
+  const mins = h * 60 + m
+  if (day === 0 || day === 6) return { open: false, label: 'Markets closed - signals resume at next open' }
+  if (mins < 570) return { open: false, label: 'Markets closed - signals resume at next open' } // before 9:30 ET
+  if (mins >= 960) return { open: false, label: 'Markets closed - signals resume at next open' } // after 4:00 ET
+  return { open: true, label: 'US markets open' }
+}
+
+// Helper to get a dynamic status message for the header
+const getDynamicStatusMessage = (globalData, activeStatuses, activeStatusIdx) => {
+  if (!globalData || !globalData.coverage) return activeStatuses[activeStatusIdx] // Fallback
+  const openExchanges = (globalData.exchanges || []).filter(ex => ex.is_open).map(ex => ex.code)
+  if (openExchanges.length > 0) {
+    return `Active: ${openExchanges.join(', ')}`
+  }
+  return activeStatuses[activeStatusIdx]
+}
+
+const statusBadge = {
+  VALIDATED: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-emerald-500/10 shadow-sm',
+  TESTING: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+  ACTIVE: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30',
+  PAUSED: 'bg-zinc-500/15 text-zinc-400 border border-zinc-500/30',
+  STOPPED: 'bg-red-500/15 text-red-400 border border-red-500/30',
+}
+
+const typeIcons = {
+  momentum: { color: 'text-cyan-400 bg-cyan-500/10', icon: '⚡' },
+  breakout: { color: 'text-orange-400 bg-orange-500/10', icon: '🔥' },
+  mean_reversion: { color: 'text-violet-400 bg-violet-500/10', icon: '🔄' },
+  scalping: { color: 'text-emerald-400 bg-emerald-500/10', icon: '⚔️' },
+  pairs: { color: 'text-blue-400 bg-blue-500/10', icon: '🔗' },
+  options: { color: 'text-yellow-400 bg-yellow-500/10', icon: '📊' },
+  short: { color: 'text-red-400 bg-red-500/10', icon: '📉' },
+  custom: { color: 'text-pink-400 bg-pink-500/10', icon: '🧠' },
+}
+
+const GlowCard = ({ children, className = '', glow = '' }) => (
+  <div className={`relative rounded-2xl bg-[#0a0a0f]/80 border border-white/[0.06] backdrop-blur-sm ${className}`}>
+    {glow && <div className={`absolute inset-0 rounded-2xl ${glow} blur-xl opacity-30 -z-10`} />}
+    {children}
+  </div>
+)
+
+const MetricCard = ({ label, value, sub, color = 'text-white', icon: Icon, progress, progressTarget, tooltip, onClick, expandable }) => (
+  <div
+    className={`p-4 rounded-xl bg-black/40 border border-white/[0.04] hover:border-white/[0.08] transition-all duration-300 group relative ${expandable ? 'cursor-pointer hover:bg-white/[0.02]' : ''}`}
+    title={tooltip}
+    onClick={onClick}
+  >
+    <div className="flex items-center justify-between mb-1">
+      <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-medium">{label}</span>
+      <div className="flex items-center gap-1">
+        {expandable && <ChevronDown className="w-3 h-3 text-zinc-700 group-hover:text-zinc-400 transition-colors" />}
+        {Icon && <Icon className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors" />}
+      </div>
+    </div>
+    <div className={`text-2xl font-bold tracking-tight ${color}`}>{value}</div>
+    {progress !== undefined && (
+      <div className="mt-2 h-1 bg-zinc-800/80 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all duration-1000 ${N(progress) >= 100 ? 'bg-emerald-500' : N(progress) >= 66 ? 'bg-cyan-500' : 'bg-amber-500'}`} style={{ width: Math.min(100, N(progress)) + '%' }} />
+      </div>
+    )}
+    {sub && <div className="text-[11px] text-zinc-600 mt-1">{sub}</div>}
+    {tooltip && (
+      <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-white/10 shadow-xl text-[11px] text-zinc-300 whitespace-nowrap max-w-[250px] text-wrap text-center">
+          {tooltip}
+        </div>
+      </div>
+    )}
+  </div>
+)
+
+// ── Sparkline — mini inline trend chart ──
+const Sparkline = ({ data, width = 120, height = 32, color = '#22d3ee' }) => {
+  if (!data || data.length < 2) return null
+  const min = Math.min(...data)
+  const max = Math.max(...data)
+  const range = max - min || 1
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width
+    const y = height - ((v - min) / range) * (height - 4) - 2
+    return `${x},${y}`
+  }).join(' ')
+  const lastVal = data[data.length - 1]
+  const firstVal = data[0]
+  const lineColor = lastVal >= firstVal ? '#34d399' : '#f87171'
+  return (
+    <svg width={width} height={height} className="overflow-visible">
+      <polyline points={points} fill="none" stroke={lineColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={(data.length - 1) / (data.length - 1) * width} cy={height - ((lastVal - min) / range) * (height - 4) - 2} r="2.5" fill={lineColor} />
+    </svg>
+  )
+}
+
+// ── Trend Detail Panel — expandable metric deep-dive ──
+const TrendPanel = ({ title, isOpen, onClose, children }) => {
+  if (!isOpen) return null
+  return (
+    <div className="col-span-full mt-1 mb-2 p-5 rounded-xl bg-black/60 border border-white/[0.06] backdrop-blur-xl animate-in slide-in-from-top-2 duration-300">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-sm font-bold text-zinc-200">{title}</h4>
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/[0.06] transition-colors">
+          <XCircle className="w-4 h-4 text-zinc-500" />
+        </button>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+// ── Cumulative P&L Area Chart ──
+const PnLChart = ({ data, height = 200 }) => {
+  if (!data || data.length === 0) return null
+  const cumData = data.reduce((acc, d, i) => {
+    const prev = i > 0 ? acc[i - 1].cum : 0
+    acc.push({ ...d, cum: prev + N(d.pnl || d.daily_pnl) })
+    return acc
+  }, [])
+  const values = cumData.map(d => d.cum)
+  const min = Math.min(...values, 0)
+  const max = Math.max(...values, 0)
+  const range = max - min || 1
+  const w = 100 // percentage-based
+  const h = height
+
+  const zeroY = h - ((-min) / range) * (h - 20) - 10
+
+  const points = cumData.map((d, i) => {
+    const x = (i / Math.max(cumData.length - 1, 1)) * w
+    const y = h - ((d.cum - min) / range) * (h - 20) - 10
+    return { x, y, ...d }
+  })
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+  const areaD = pathD + ` L ${points[points.length - 1].x} ${zeroY} L ${points[0].x} ${zeroY} Z`
+
+  const finalVal = values[values.length - 1]
+  const lineColor = finalVal >= 0 ? '#34d399' : '#f87171'
+  const fillColor = finalVal >= 0 ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)'
+
+  return (
+    <div className="relative w-full" style={{ height }}>
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-full">
+        {/* Zero line */}
+        <line x1="0" y1={zeroY} x2={w} y2={zeroY} stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" strokeDasharray="2,2" />
+        {/* Area fill */}
+        <path d={areaD} fill={fillColor} />
+        {/* Line */}
+        <path d={pathD} fill="none" stroke={lineColor} strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {/* Hover dots + labels */}
+      <div className="absolute inset-0 flex">
+        {points.map((p, i) => (
+          <div key={i} className="flex-1 relative group">
+            <div className="absolute hidden group-hover:block z-30 px-2.5 py-1.5 rounded-lg bg-zinc-900/95 border border-white/10 shadow-xl text-[10px] whitespace-nowrap -translate-x-1/2"
+              style={{ left: '50%', bottom: `${((p.cum - min) / range) * 100 * 0.8 + 15}%` }}>
+              <div className="text-zinc-400">{p.date}</div>
+              <div className={N(p.cum) >= 0 ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                {fmt$(p.cum)} cum
+              </div>
+              <div className={N(p.pnl || p.daily_pnl) >= 0 ? 'text-emerald-400/70' : 'text-red-400/70'}>
+                {fmt$(p.pnl || p.daily_pnl)} daily
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Y-axis labels */}
+      <div className="absolute left-1 top-1 text-[9px] text-zinc-600">{fmt$(max)}</div>
+      <div className="absolute left-1 bottom-1 text-[9px] text-zinc-600">{fmt$(min)}</div>
+      <div className="absolute right-2 bottom-1 text-[9px] font-bold" style={{ color: lineColor }}>
+        {fmt$(finalVal)}
+      </div>
+    </div>
+  )
+}
+
+// ── Collapsible Section Wrapper ──
+const CollapsibleSection = ({ id, title, subtitle, icon: Icon, iconColor = 'text-cyan-400', iconBg = 'bg-cyan-500/10 border-cyan-500/20', glow, badge, badgeColor, isOpen, onToggle, children }) => (
+  <div id={`section-${id}`} data-section={id}>
+    <GlowCard glow={isOpen ? glow : ''} className={`transition-all duration-300 ${isOpen ? 'p-5 md:p-6' : 'p-4'}`}>
+      <button onClick={() => onToggle(id)} className="w-full flex items-center justify-between group">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-xl bg-gradient-to-br ${iconBg} border`}>
+            <Icon className={`w-5 h-5 ${iconColor}`} />
+          </div>
+          <div className="text-left">
+            <h3 className="text-lg font-bold tracking-tight">{title}</h3>
+            {subtitle && <p className="text-[11px] text-zinc-500">{subtitle}</p>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {badge && <span className={`text-[10px] px-2 py-1 rounded-lg font-medium border ${badgeColor || 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'}`}>{badge}</span>}
+          <div className={`p-1.5 rounded-lg transition-all duration-300 group-hover:bg-white/[0.06] ${isOpen ? 'rotate-180' : ''}`}>
+            <ChevronDown className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
+          </div>
+        </div>
+      </button>
+      <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[5000px] opacity-100 mt-5' : 'max-h-0 opacity-0 mt-0'}`}>
+        {isOpen && children}
+      </div>
+    </GlowCard>
+  </div>
+)
+
+// ── Section Nav Pills ──
+const SECTIONS = [
+  { id: 'score', label: 'Score', icon: '⚡' },
+  { id: 'live', label: 'Live', icon: '🧠' },
+  { id: 'intel', label: 'Intel', icon: '🔮' },
+  { id: 'strategies', label: 'Strategies', icon: '🏆' },
+  { id: 'daytrading', label: 'Day Trading', icon: '⚔️' },
+  { id: 'options', label: 'Options', icon: '📊' },
+  { id: 'positions', label: 'Positions', icon: '👁️' },
+  { id: 'global', label: 'Global', icon: '🌍' },
+  { id: 'pnl', label: 'P&L', icon: '💰' },
+]
+
+const SectionNav = ({ activeSection, openSections, onJump }) => (
+  <div className="sticky top-14 z-40 border-b border-white/[0.04] bg-[#030305]/90 backdrop-blur-xl">
+    <div className="max-w-[1600px] mx-auto px-6 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+      {SECTIONS.map(s => (
+        <button
+          key={s.id}
+          onClick={() => onJump(s.id)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 border ${
+            activeSection === s.id
+              ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30 shadow-cyan-500/10 shadow-sm'
+              : openSections[s.id]
+                ? 'bg-white/[0.04] text-zinc-300 border-white/[0.06] hover:bg-white/[0.06]'
+                : 'bg-transparent text-zinc-600 border-transparent hover:text-zinc-400 hover:bg-white/[0.03]'
+          }`}
+        >
+          <span className="text-[11px]">{s.icon}</span>
+          {s.label}
+        </button>
+      ))}
+    </div>
+  </div>
+)
+
+// ── Display helper: show dash for empty/null values ──
+const D = (v, formatter) => {
+  if (v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v))) return '—'
+  const n = Number(v)
+  if (typeof v === 'number' && n === 0) return formatter ? formatter(0) : '0'
+  if (formatter) return formatter(n)
+  return v
+}
+
+const RankBadge = ({ rank }) => {
+  const styles = {
+    1: 'bg-gradient-to-br from-yellow-500/30 to-yellow-600/10 text-yellow-400 border-yellow-500/30 shadow-yellow-500/20 shadow-lg',
+    2: 'bg-gradient-to-br from-zinc-400/20 to-zinc-500/10 text-zinc-300 border-zinc-400/20',
+    3: 'bg-gradient-to-br from-orange-500/20 to-orange-600/10 text-orange-400 border-orange-500/20',
+  }
+  return (
+    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black border ${styles[rank] || 'bg-white/[0.03] text-zinc-500 border-white/[0.04]'}`}>
+      {rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : `#${rank}`}
+    </div>
+  )
+}
+
+export default function PaperTradingDashboard() {
+  const [data, setData] = useState({ accuracy: null, leaderboard: [], positions: [], trades: [], dailyPnl: [], status: null })
+  const [intel, setIntel] = useState(null)
+  const [rTotal, setRTotal] = useState(null)
+  const [score, setScore] = useState(null)  // consolidated sygnl-score
+  const [globalData, setGlobalData] = useState(null)
+  const [expanded, setExpanded] = useState(null)
+  const [detail, setDetail] = useState(null)
+  const [online, setOnline] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [lastUpdate, setLastUpdate] = useState(null)
+  const [pulse, setPulse] = useState(false)
+  const [optionsData, setOptionsData] = useState(null)
+  const [dayTrading, setDayTrading] = useState(null)
+  const [dayTradingPerf, setDayTradingPerf] = useState(null)
+  const [activeStatusIdx, setActiveStatusIdx] = useState(0)
+  const [greeksData, setGreeksData] = useState(null)
+  const [activeSection, setActiveSection] = useState('score')
+  const [openSections, setOpenSections] = useState({
+    score: true,
+    live: true,
+    intel: false,
+    strategies: false,
+    daytrading: false,
+    options: false,
+    positions: false,
+    global: false,
+    pnl: false,
+  })
+  const sectionRefs = useRef({})
+
+  const toggleSection = (id) => {
+    setOpenSections(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const jumpToSection = (id) => {
+    setOpenSections(prev => ({ ...prev, [id]: true }))
+    setActiveSection(id)
+    setTimeout(() => {
+      const el = document.getElementById(`section-${id}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
+  }
+
+  // Intersection observer for active section tracking
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.dataset.section)
+          }
+        })
+      },
+      { rootMargin: '-100px 0px -60% 0px', threshold: 0.1 }
+    )
+    SECTIONS.forEach(s => {
+      const el = document.getElementById(`section-${s.id}`)
+      if (el) observer.observe(el)
+    })
+    return () => observer.disconnect()
+  }, [loading])
+  const [expandedMetric, setExpandedMetric] = useState(null) // 'score' | 'winrate' | 'pnl' | 'positions' | 'capital'
+  const activeStatuses = ['Monitoring Markets', 'Scanning Signals', 'Tracking Positions', 'Analyzing Patterns', 'Evaluating Risk']
+
+  const fetchAll = useCallback(async () => {
+    setPulse(true)
+    try {
+      const endpoints = ['accuracy', 'leaderboard', 'positions', 'trades?days=7', 'daily-pnl', 'status']
+      const [results, gm, intelData, rTotalData, optionsRes, scoreRes, dayTradingRes, greeksRes] = await Promise.all([
+        Promise.all(endpoints.map(e => fetch(`${PAPER_API}/api/${e}`).then(r => r.ok ? r.json() : null).catch(() => null))),
+        fetch(`${GLOBAL_API}/api/global-markets`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`${PAPER_API}/api/intelligence`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`${PAPER_API}/api/r-total`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`${PAPER_API}/api/options-shorts`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`${PAPER_API}/api/sygnl-score`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`${PAPER_API}/api/day-trading`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`${PAPER_API}/api/options-greeks`).then(r => r.ok ? r.json() : null).catch(() => null),
+      ])
+      setData({ accuracy: results[0], leaderboard: results[1]?.leaderboard || results[1] || [], positions: results[2]?.positions || results[2] || [], trades: results[3]?.trades || results[3] || [], dailyPnl: results[4]?.daily_pnl || results[4] || [], status: results[5] })
+      setGlobalData(gm)
+      setIntel(intelData)
+      setRTotal(rTotalData)
+      setOptionsData(optionsRes)
+      setScore(scoreRes)
+      setDayTrading(dayTradingRes)
+      setGreeksData(greeksRes)
+      // Online = API is reachable (any data came back)
+      setOnline(!!(results[0] || results[1] || results[5] || gm || scoreRes))
+      setLastUpdate(new Date())
+    } catch { setOnline(false) }
+    setLoading(false)
+    setTimeout(() => setPulse(false), 600)
+  }, [])
+
+  const fetchDetail = async (name) => {
+    try {
+      const res = await fetch(`${PAPER_API}/api/strategy/${name}`)
+      if (res.ok) setDetail(await res.json())
+    } catch {}
+  }
+
+    // Update interval for all data fetches (reduced for more real-time feel)
+  useEffect(() => { fetchAll(); const i = setInterval(fetchAll, 5000); return () => clearInterval(i) }, [fetchAll])
+  useEffect(() => { const i = setInterval(() => setActiveStatusIdx(p => (p + 1) % activeStatuses.length), 3000); return () => clearInterval(i) }, [activeStatuses.length])
+
+  useEffect(() => {
+    if (!expanded) return
+    const i = setInterval(() => fetchDetail(expanded), 15000)
+    return () => clearInterval(i)
+  }, [expanded])
+
+  const toggle = (name) => {
+    if (expanded === name) { setExpanded(null); setDetail(null) }
+    else { setExpanded(name); fetchDetail(name) }
+  }
+
+  const { accuracy: acc, leaderboard: lb, positions: pos, trades, dailyPnl } = data
+  const totalCapital = lb.reduce((s, x) => s + N(x.starting_capital || 20000), 0)
+  const totalPnl = lb.reduce((s, x) => s + N(x.total_pnl), 0)
+  const totalTrades = lb.reduce((s, x) => s + N(x.total_trades), 0)
+  // Unrealized P&L per strategy (from open positions)
+  const unrealizedByStrategy = pos.reduce((acc, p) => {
+    const key = p.strategy || p.strategy_name || ''
+    acc[key] = (acc[key] || 0) + N(p.unrealized_pnl)
+    return acc
+  }, {})
+  const totalUnrealized = Object.values(unrealizedByStrategy).reduce((s, v) => s + v, 0)
+  const totalRealized = totalPnl
+  const capitalDeployed = pos.reduce((s, p) => s + Math.abs(N(p.market_value || (N(p.quantity) * N(p.entry_price)))), 0)
+  const freeCapital = Math.max(0, totalCapital - capitalDeployed)
+  const utilization = totalCapital > 0 ? (capitalDeployed / totalCapital * 100) : 0
+
+  // Issue 4: Compute daily P&L from trades if dailyPnl is empty
+  const effectiveDailyPnl = (() => {
+    if (dailyPnl && dailyPnl.length > 0) return dailyPnl
+    if (!trades || trades.length === 0) return []
+    const byDay = {}
+    trades.forEach(t => {
+      const date = (t.exit_time || t.close_time || t.timestamp || '').slice(0, 10)
+      if (!date) return
+      byDay[date] = (byDay[date] || 0) + N(t.pnl)
+    })
+    return Object.entries(byDay).sort((a, b) => a[0].localeCompare(b[0])).map(([date, pnl]) => ({ date, pnl }))
+  })()
+
+  return (
+    <div className="min-h-screen bg-[#030305] text-white antialiased selection:bg-cyan-500/30">
+      {/* Ambient glow */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] bg-cyan-500/[0.04] rounded-full blur-[160px]" />
+        <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-violet-500/[0.04] rounded-full blur-[140px]" />
+        <div className="absolute top-1/2 left-0 w-[300px] h-[400px] bg-emerald-500/[0.02] rounded-full blur-[120px]" />
+      </div>
+
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 border-b border-white/[0.04] bg-[#030305]/80 backdrop-blur-2xl">
+        <div className="max-w-[1600px] mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Cpu className="w-5 h-5 text-cyan-400" />
+              <h1 className="text-lg font-bold tracking-tight">
+                <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent">SYGNL</span>
+                <span className="text-zinc-400 font-medium ml-2">Paper Trading</span>
+              </h1>
+            </div>
+            <div className="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-lg bg-white/[0.03]">
+              <span className="text-[10px] uppercase tracking-widest text-zinc-600">v2.0</span>
+            </div>
+            <div className="hidden md:flex items-center gap-2 ml-3 px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/[0.08] to-violet-500/[0.08] border border-cyan-500/20">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-60" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500" />
+              </span>
+              <span className="text-[10px] font-bold tracking-wider text-cyan-400">24/7 ACTIVE</span>
+              <span className="text-[10px] text-zinc-500">·</span>
+              <span className="text-[10px] text-zinc-400 min-w-[110px] transition-all duration-500">{getDynamicStatusMessage(globalData, activeStatuses, activeStatusIdx)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-500 ${online ? 'bg-emerald-500/[0.08] border border-emerald-500/20' : 'bg-red-500/[0.08] border border-red-500/20'}`}>
+              <span className="relative flex h-2 w-2">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${online ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${online ? 'bg-emerald-500' : 'bg-red-500'}`} />
+              </span>
+              <span className={`text-xs font-semibold tracking-wide ${online ? 'text-emerald-400' : 'text-red-400'}`}>
+                {online ? 'LIVE' : 'CONNECTING...'}
+              </span>
+            </div>
+            <button onClick={fetchAll} className={`p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.04] transition-all ${pulse ? 'animate-spin' : ''}`}>
+              <RefreshCw className="w-4 h-4 text-zinc-400" />
+            </button>
+            <a href="/dashboard" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">← Dashboard</a>
+          </div>
+        </div>
+      </header>
+
+      <SectionNav activeSection={activeSection} openSections={openSections} onJump={jumpToSection} />
+
+      <main className="relative z-10 max-w-[1600px] mx-auto px-6 py-8 space-y-6">
+
+        {/* ═══ HERO METRICS ═══ */}
+        <div id="section-score" data-section="score">
+        <GlowCard glow="bg-gradient-to-r from-cyan-500/20 to-violet-500/20" className="p-6">
+          <button onClick={() => toggleSection('score')} className="w-full flex items-center justify-between mb-1 group">
+            <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-medium">SYGNL Score</span>
+            <ChevronDown className={`w-4 h-4 text-zinc-600 group-hover:text-zinc-400 transition-all duration-300 ${openSections.score ? 'rotate-180' : ''}`} />
+          </button>
+          <div className={`overflow-hidden transition-all duration-500 ${openSections.score ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+                <Target className="w-5 h-5 text-cyan-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold tracking-tight">SYGNL Score</h2>
+                <p className="text-[11px] text-zinc-500">
+                  {score ? `${score.backtest?.trades ?? 0} backtest + ${score.live?.trades ?? 0} live trades · ${score.portfolio?.strategies ?? lb.length} strategies` : 'Loading...'}
+                </p>
+              </div>
+            </div>
+            {lastUpdate && (
+              <div className="flex items-center gap-1.5 text-[11px] text-zinc-600">
+                <Clock className="w-3 h-3" />
+                {lastUpdate.toLocaleTimeString()}
+              </div>
+            )}
+          </div>
+
+          {/* ── 5 consolidated metrics (clickable) ── */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {/* 1. SYGNL Score */}
+            <MetricCard
+              label="SYGNL Score"
+              value={(N(score?.sygnl_score ?? rTotal?.r_total) * 100).toFixed(1) + '%'}
+              color={N(score?.sygnl_score ?? rTotal?.r_total) >= 0.85 ? 'text-emerald-400' : N(score?.sygnl_score ?? rTotal?.r_total) >= 0.75 ? 'text-orange-400' : N(score?.sygnl_score ?? rTotal?.r_total) >= 0.65 ? 'text-yellow-400' : 'text-red-400'}
+              icon={Shield}
+              progress={N(score?.sygnl_score ?? rTotal?.r_total) / 0.85 * 100}
+              sub={score?.score_label ?? '🔴 BUILDING DATA'}
+              tooltip="Click to see score breakdown"
+              expandable
+              onClick={() => setExpandedMetric(expandedMetric === 'score' ? null : 'score')}
+            />
+            {/* 2. Win Rate */}
+            <div
+              className="p-4 rounded-xl bg-black/40 border border-white/[0.04] hover:border-white/[0.08] cursor-pointer hover:bg-white/[0.02] transition-all duration-300"
+              onClick={() => setExpandedMetric(expandedMetric === 'winrate' ? null : 'winrate')}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500">Win Rate</div>
+                <ChevronDown className="w-3 h-3 text-zinc-700" />
+              </div>
+              <div className={`text-xl font-bold ${N(score?.backtest?.win_rate) >= 0.6 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {(N(score?.backtest?.win_rate) * 100).toFixed(1)}%
+              </div>
+              <div className="text-[10px] text-zinc-500 mt-1">
+                {score?.backtest?.trades ?? 0} backtest · Live: {(N(score?.live?.win_rate) * 100).toFixed(1)}%
+              </div>
+            </div>
+            {/* 3. P&L */}
+            <div
+              className="p-4 rounded-xl bg-black/40 border border-white/[0.04] hover:border-white/[0.08] cursor-pointer hover:bg-white/[0.02] transition-all duration-300"
+              onClick={() => setExpandedMetric(expandedMetric === 'pnl' ? null : 'pnl')}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500">P&L</div>
+                <ChevronDown className="w-3 h-3 text-zinc-700" />
+              </div>
+              <div className={`text-xl font-bold ${N(totalRealized) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {fmt$(totalRealized)}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[10px] text-zinc-500">realized</span>
+                <span className={`text-[10px] font-medium ${N(totalUnrealized) >= 0 ? 'text-cyan-400' : 'text-amber-400'}`}>
+                  {fmt$(totalUnrealized)} open
+                </span>
+              </div>
+            </div>
+            {/* 4. Positions */}
+            <MetricCard
+              label="Open Positions"
+              value={score?.live?.open_positions ?? pos.length}
+              color="text-blue-400"
+              icon={Activity}
+              sub={`${score?.portfolio?.strategies ?? lb.length} strategies active`}
+              tooltip="Click to see position breakdown"
+              expandable
+              onClick={() => setExpandedMetric(expandedMetric === 'positions' ? null : 'positions')}
+            />
+            {/* 5. Capital */}
+            <div
+              className="p-4 rounded-xl bg-black/40 border border-white/[0.04] hover:border-white/[0.08] cursor-pointer hover:bg-white/[0.02] transition-all duration-300"
+              onClick={() => setExpandedMetric(expandedMetric === 'capital' ? null : 'capital')}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500">Capital</div>
+                <ChevronDown className="w-3 h-3 text-zinc-700" />
+              </div>
+              <div className="text-xl font-bold text-zinc-200">
+                ${N(score?.portfolio?.total_capital ?? totalCapital).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-white/[0.06] mt-2 mb-1">
+                <div className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500"
+                  style={{ width: `${Math.min(100, score?.portfolio?.deploy_pct ?? utilization)}%` }} />
+              </div>
+              <div className="text-[10px] text-zinc-500">
+                {(score?.portfolio?.deploy_pct ?? utilization).toFixed(1)}% deployed · ${N(score?.portfolio?.free_capital ?? freeCapital).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} free
+              </div>
+            </div>
+          </div>
+
+          {/* ── Expanded Trend Panels ── */}
+          <TrendPanel title="📊 SYGNL Score Breakdown" isOpen={expandedMetric === 'score'} onClose={() => setExpandedMetric(null)}>
+            <div className="grid grid-cols-5 gap-3 mb-4">
+              {Object.entries(score?.score_components || rTotal?.components || {}).map(([key, val]) => (
+                <div key={key} className="text-center p-3 rounded-lg bg-white/[0.02]">
+                  <div className="text-[9px] uppercase text-zinc-500 mb-1">{key}</div>
+                  <div className={`text-lg font-bold ${N(val) > 0.5 ? 'text-emerald-400' : N(val) > 0 ? 'text-amber-400' : 'text-red-400'}`}>
+                    {(N(val) * 100).toFixed(1) + '%'}
+                  </div>
+                  <div className="h-1 bg-zinc-800 rounded-full mt-2">
+                    <div className={`h-full rounded-full ${N(val) > 0.5 ? 'bg-emerald-500' : N(val) > 0 ? 'bg-amber-500' : 'bg-red-500'}`}
+                      style={{ width: `${Math.min(100, Math.abs(N(val)) * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-[11px] text-zinc-500">
+              Target: ≥0.85 for live trading · Current bottleneck: {
+                (() => {
+                  const c = score?.score_components || rTotal?.components || {}
+                  const worst = Object.entries(c).sort((a, b) => N(a[1]) - N(b[1]))[0]
+                  return worst ? <span className="text-red-400 font-semibold">{worst[0]} ({(N(worst[1]) * 100).toFixed(1)}%)</span> : 'loading...'
+                })()
+              }
+            </div>
+          </TrendPanel>
+
+          <TrendPanel title="📈 Win Rate Trend" isOpen={expandedMetric === 'winrate'} onClose={() => setExpandedMetric(null)}>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <div className="text-[10px] uppercase text-zinc-500 mb-2">Win Rate by Strategy (Live)</div>
+                <div className="space-y-2">
+                  {(acc?.strategies ? Object.entries(acc.strategies) : []).filter(([,s]) => s.trades > 0).sort((a, b) => b[1].win_rate - a[1].win_rate).map(([name, s]) => (
+                    <div key={name} className="flex items-center gap-2">
+                      <span className="text-[10px] text-zinc-400 w-32 truncate">{name.replace(/_/g, ' ')}</span>
+                      <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${s.win_rate >= 50 ? 'bg-emerald-500' : s.win_rate >= 30 ? 'bg-amber-500' : 'bg-red-500'}`}
+                          style={{ width: `${s.win_rate}%` }} />
+                      </div>
+                      <span className="text-[10px] font-bold text-zinc-300 w-12 text-right">{N(s.win_rate).toFixed(1)}%</span>
+                      <span className="text-[9px] text-zinc-600 w-8">{s.trades}t</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase text-zinc-500 mb-2">Backtest vs Live</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg bg-white/[0.02] text-center">
+                    <div className="text-[9px] text-zinc-500 uppercase">Backtest</div>
+                    <div className="text-2xl font-bold text-emerald-400">{(N(score?.backtest?.win_rate) * 100).toFixed(1)}%</div>
+                    <div className="text-[9px] text-zinc-600">{score?.backtest?.trades ?? 0} trades · 6mo</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white/[0.02] text-center">
+                    <div className="text-[9px] text-zinc-500 uppercase">Live</div>
+                    <div className={`text-2xl font-bold ${N(score?.live?.win_rate) >= 0.5 ? 'text-emerald-400' : 'text-red-400'}`}>{(N(score?.live?.win_rate) * 100).toFixed(1)}%</div>
+                    <div className="text-[9px] text-zinc-600">{score?.live?.trades ?? 0} trades</div>
+                  </div>
+                </div>
+                <div className="mt-3 p-2 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                  <div className="text-[10px] text-amber-400">
+                    ⚠️ Gap: {((N(score?.backtest?.win_rate) - N(score?.live?.win_rate)) * 100).toFixed(1)}pp — live underperforming backtest
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TrendPanel>
+
+          <TrendPanel title="💰 P&L Trend" isOpen={expandedMetric === 'pnl'} onClose={() => setExpandedMetric(null)}>
+            <div className="mb-4">
+              <div className="text-[10px] uppercase text-zinc-500 mb-2">Cumulative P&L</div>
+              <PnLChart data={effectiveDailyPnl} height={160} />
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              <div className="p-3 rounded-lg bg-white/[0.02] text-center">
+                <div className="text-[9px] text-zinc-500 uppercase">Realized</div>
+                <div className={`text-lg font-bold ${N(totalRealized) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt$(totalRealized)}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/[0.02] text-center">
+                <div className="text-[9px] text-zinc-500 uppercase">Unrealized</div>
+                <div className={`text-lg font-bold ${N(totalUnrealized) >= 0 ? 'text-cyan-400' : 'text-amber-400'}`}>{fmt$(totalUnrealized)}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/[0.02] text-center">
+                <div className="text-[9px] text-zinc-500 uppercase">Sharpe</div>
+                <div className={`text-lg font-bold ${N(score?.live?.sharpe) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{N(score?.live?.sharpe).toFixed(2)}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/[0.02] text-center">
+                <div className="text-[9px] text-zinc-500 uppercase">Best Day</div>
+                <div className="text-lg font-bold text-emerald-400">
+                  {fmt$(Math.max(...(effectiveDailyPnl || []).map(d => N(d.pnl || d.daily_pnl)), 0))}
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-[10px] uppercase text-zinc-500 mb-1">P&L by Strategy</div>
+                {(acc?.strategies ? Object.entries(acc.strategies) : []).filter(([,s]) => s.pnl !== 0).sort((a, b) => b[1].pnl - a[1].pnl).slice(0, 6).map(([name, s]) => (
+                  <div key={name} className="flex items-center justify-between py-1 text-[10px]">
+                    <span className="text-zinc-400 truncate w-28">{name.replace(/_/g, ' ')}</span>
+                    <span className={N(s.pnl) >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>{fmt$(s.pnl)}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className="text-[10px] uppercase text-zinc-500 mb-1">Daily Breakdown</div>
+                {(effectiveDailyPnl || []).slice(-5).reverse().map((d, i) => (
+                  <div key={i} className="flex items-center justify-between py-1 text-[10px]">
+                    <span className="text-zinc-500">{d.date}</span>
+                    <span className={N(d.pnl || d.daily_pnl) >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>
+                      {fmt$(d.pnl || d.daily_pnl)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TrendPanel>
+
+          <TrendPanel title="📍 Position Breakdown" isOpen={expandedMetric === 'positions'} onClose={() => setExpandedMetric(null)}>
+            <div className="space-y-2">
+              {pos.map((p, i) => {
+                const exposure = Math.abs(N(p.current_price) * N(p.quantity))
+                return (
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                    <div className={`w-1.5 h-8 rounded-full flex-shrink-0 ${N(p.unrealized_pnl) >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                    <div className="w-14 font-bold text-sm">{p.symbol}</div>
+                    <div className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${p.direction === 'LONG' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>{p.direction}</div>
+                    <div className="text-[10px] text-zinc-500 w-20">{p.strategy}</div>
+                    <div className="text-[10px] text-zinc-400 w-16">qty: {p.quantity}</div>
+                    <div className="text-[10px] text-zinc-400 w-20">${N(exposure).toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+                    <div className="flex-1" />
+                    <div className={`text-sm font-bold ${N(p.unrealized_pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {fmt$(p.unrealized_pnl)} <span className="text-[9px] opacity-70">({fmtPct(N(p.unrealized_pnl_pct) * 100)})</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="mt-3 flex items-center justify-between text-[10px] text-zinc-500 pt-2 border-t border-white/[0.04]">
+              <span>{pos.length} positions across {new Set(pos.map(p => p.strategy)).size} strategies</span>
+              <span className={N(totalUnrealized) >= 0 ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                Total: {fmt$(totalUnrealized)}
+              </span>
+            </div>
+          </TrendPanel>
+
+          <TrendPanel title="🏦 Capital Allocation" isOpen={expandedMetric === 'capital'} onClose={() => setExpandedMetric(null)}>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="p-3 rounded-lg bg-white/[0.02] text-center">
+                <div className="text-[9px] text-zinc-500 uppercase">Total Capital</div>
+                <div className="text-lg font-bold text-zinc-200">${N(score?.portfolio?.total_capital ?? totalCapital).toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/[0.02] text-center">
+                <div className="text-[9px] text-zinc-500 uppercase">Deployed</div>
+                <div className="text-lg font-bold text-cyan-400">${N(score?.portfolio?.deployed ?? capitalDeployed).toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/[0.02] text-center">
+                <div className="text-[9px] text-zinc-500 uppercase">Free Cash</div>
+                <div className="text-lg font-bold text-zinc-400">${N(score?.portfolio?.free_capital ?? freeCapital).toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+              </div>
+            </div>
+            <div className="text-[10px] uppercase text-zinc-500 mb-2">By Strategy Type</div>
+            <div className="space-y-1.5">
+              {(() => {
+                const typeMap = {}
+                lb.forEach(s => {
+                  const t = s.type || 'generic'
+                  if (!typeMap[t]) typeMap[t] = { capital: 0, deployed: 0, count: 0 }
+                  typeMap[t].capital += N(s.starting_capital || 20000)
+                  typeMap[t].deployed += N(s.starting_capital || 20000) - N(s.current_cash || s.starting_capital || 20000)
+                  typeMap[t].count++
+                })
+                return Object.entries(typeMap).sort((a, b) => b[1].capital - a[1].capital).map(([type, d]) => (
+                  <div key={type} className="flex items-center gap-2">
+                    <span className="text-[10px] text-zinc-400 w-24 capitalize">{type}</span>
+                    <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-cyan-600 to-violet-600"
+                        style={{ width: `${(d.capital / N(score?.portfolio?.total_capital ?? totalCapital)) * 100}%` }} />
+                    </div>
+                    <span className="text-[10px] text-zinc-300 w-20 text-right">${(d.capital / 1000).toFixed(0)}K</span>
+                    <span className="text-[9px] text-zinc-600 w-8">{d.count}s</span>
+                  </div>
+                ))
+              })()}
+            </div>
+          </TrendPanel>
+        </GlowCard>
+
+        {/* ═══ SYGNL INTELLIGENCE SCORE ═══ */}
+        {(intel || rTotal) && (
+          <GlowCard glow="bg-gradient-to-r from-violet-500/20 to-cyan-500/20" className="p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-cyan-500/20 border border-violet-500/20">
+                  <Brain className="w-5 h-5 text-violet-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold tracking-tight">SYGNL Intelligence Score</h2>
+                  <p className="text-[11px] text-zinc-500">Data quality · Strategy health · Pattern analysis</p>
+                </div>
+              </div>
+              {intel?.timestamp && (
+                <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
+                  <Clock className="w-3 h-3" />
+                  {new Date(intel.timestamp).toLocaleString()}
+                </div>
+              )}
+            </div>
+
+            {/* Score Cards Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-5">
+              <MetricCard
+                label="Signal Quality"
+                value={N(intel?.signal_quality_breakdown?.pass_rate).toFixed(0) + '%'}
+                color={N(intel?.signal_quality_breakdown?.pass_rate) >= 50 ? 'text-emerald-400' : N(intel?.signal_quality_breakdown?.pass_rate) >= 25 ? 'text-amber-400' : 'text-red-400'}
+                icon={CheckCircle}
+                progress={N(intel?.signal_quality_breakdown?.pass_rate)}
+                sub={`${N(intel?.signal_quality_breakdown?.pass)} pass / ${N(intel?.signal_quality_breakdown?.warn)} warn / ${N(intel?.signal_quality_breakdown?.reject)} reject`}
+                tooltip="Percentage of signals that pass quality filters"
+              />
+              <MetricCard
+                label="Calibration"
+                value={(N(rTotal?.components?.calibration) * 100).toFixed(1) + '%'}
+                color={N(rTotal?.components?.calibration) >= 0.8 ? 'text-emerald-400' : 'text-amber-400'}
+                icon={Target}
+                sub="Weight: 30%"
+                tooltip="How well predicted probabilities match actual outcomes (30% of SYGNL Score)"
+              />
+              <MetricCard
+                label="Expectancy"
+                value={(N(rTotal?.components?.expectancy) * 100).toFixed(1) + '%'}
+                color={N(rTotal?.components?.expectancy) >= 0.7 ? 'text-emerald-400' : 'text-amber-400'}
+                icon={TrendingUp}
+                sub="Weight: 25%"
+                tooltip="Expected value per trade normalized to risk (25% of SYGNL Score)"
+              />
+              <MetricCard
+                label="Sharpe"
+                value={(N(rTotal?.components?.sharpe) * 100).toFixed(1) + '%'}
+                color={N(rTotal?.components?.sharpe) >= 0.8 ? 'text-emerald-400' : 'text-amber-400'}
+                icon={Activity}
+                sub="Weight: 20%"
+                tooltip="Risk-adjusted return ratio (20% of SYGNL Score)"
+              />
+              <MetricCard
+                label="Penalties"
+                value={'-' + N(rTotal?.penalties).toFixed(3)}
+                color={N(rTotal?.penalties) <= 0.05 ? 'text-emerald-400' : N(rTotal?.penalties) <= 0.15 ? 'text-amber-400' : 'text-red-400'}
+                icon={AlertTriangle}
+                sub={`${N(rTotal?.signals_count)} / 200 signals`}
+                tooltip="Score deductions from insufficient data, drawdowns, or risk violations"
+              />
+              <MetricCard
+                label="Strategies"
+                value={`${N(intel?.summary?.active_grade_a_b)}/${N(intel?.summary?.total_strategies)}`}
+                color={N(intel?.summary?.active_grade_a_b) > 0 ? 'text-emerald-400' : 'text-red-400'}
+                icon={Cpu}
+                sub={`${N(intel?.summary?.dead_or_dying)} dead`}
+                tooltip="Active grade A/B strategies out of total registered"
+              />
+              <MetricCard
+                label="Total PnL"
+                value={fmt$(intel?.summary?.total_pnl)}
+                color={N(intel?.summary?.total_pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}
+                icon={DollarSign}
+                sub={`${N(intel?.summary?.total_open_positions)} open positions`}
+                tooltip="Combined P&L from all intelligence-tracked strategies"
+              />
+            </div>
+
+            {/* Validation Metrics */}
+            {rTotal?.validation_metrics && (
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-5">
+                {[
+                  ['Win Rate', (N(rTotal.validation_metrics.win_rate) * 100).toFixed(1) + '%', N(rTotal.validation_metrics.win_rate) >= 0.55 ? 'text-emerald-400' : 'text-red-400'],
+                  ['Profit Factor', N(rTotal.validation_metrics.profit_factor).toFixed(2), N(rTotal.validation_metrics.profit_factor) >= 1.75 ? 'text-emerald-400' : 'text-amber-400'],
+                  ['Sharpe', N(rTotal.validation_metrics.sharpe_ratio).toFixed(2), N(rTotal.validation_metrics.sharpe_ratio) >= 1.2 ? 'text-emerald-400' : 'text-amber-400'],
+                  ['Sortino', N(rTotal.validation_metrics.sortino_ratio).toFixed(2), N(rTotal.validation_metrics.sortino_ratio) >= 1.0 ? 'text-emerald-400' : 'text-amber-400'],
+                  ['Max DD', (N(rTotal.validation_metrics.max_drawdown_pct) * 100).toFixed(1) + '%', N(rTotal.validation_metrics.max_drawdown_pct) <= 0.10 ? 'text-emerald-400' : 'text-red-400'],
+                  ['Alpha', N(rTotal.validation_metrics.alpha).toFixed(4), N(rTotal.validation_metrics.alpha) > 0 ? 'text-emerald-400' : 'text-red-400'],
+                ].map(([label, val, color]) => (
+                  <div key={label} className="p-2 rounded-lg bg-black/30 border border-white/[0.03]">
+                    <div className="text-[9px] uppercase tracking-wider text-zinc-600">{label}</div>
+                    <div className={`text-sm font-bold ${color}`}>{val}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Risk Alerts */}
+            {intel?.risk_alerts?.length > 0 && (
+              <div className="mb-4">
+                <div className="text-[10px] uppercase tracking-wider text-red-500/70 mb-2 flex items-center gap-1.5">
+                  <AlertCircle className="w-3 h-3" /> Risk Alerts
+                </div>
+                <div className="space-y-1.5">
+                  {intel.risk_alerts.map((alert, i) => (
+                    <div key={i} className="p-2.5 rounded-lg bg-red-500/[0.06] border border-red-500/20 text-xs text-red-300/80">
+                      {alert}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Priority Actions */}
+            {intel?.priority_actions?.length > 0 && (
+              <div className="mb-4">
+                <div className="text-[10px] uppercase tracking-wider text-amber-500/70 mb-2 flex items-center gap-1.5">
+                  <Zap className="w-3 h-3" /> Priority Actions
+                </div>
+                <div className="space-y-1.5">
+                  {intel.priority_actions.map((action, i) => (
+                    <div key={i} className="p-2.5 rounded-lg bg-amber-500/[0.06] border border-amber-500/20 text-xs text-amber-300/80 flex items-center gap-2">
+                      <span className="text-amber-400 font-bold">{i + 1}.</span> {action}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Strategy Grades */}
+            {intel?.strategy_grades && (
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
+                  <Trophy className="w-3 h-3" /> Strategy Intelligence Grades
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {Object.entries(intel.strategy_grades)
+                    .sort((a, b) => N(b[1].score) - N(a[1].score))
+                    .map(([name, info]) => {
+                      const gradeColors = {
+                        A: 'border-emerald-500/30 bg-emerald-500/[0.06]',
+                        B: 'border-cyan-500/30 bg-cyan-500/[0.06]',
+                        C: 'border-amber-500/30 bg-amber-500/[0.06]',
+                        D: 'border-orange-500/30 bg-orange-500/[0.06]',
+                        F: 'border-red-500/30 bg-red-500/[0.06]',
+                      }
+                      const gradeTextColors = { A: 'text-emerald-400', B: 'text-cyan-400', C: 'text-amber-400', D: 'text-orange-400', F: 'text-red-400' }
+                      return (
+                        <div key={name} className={`p-3 rounded-xl border ${gradeColors[info.grade] || gradeColors.F}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-zinc-300">{name.replace(/_/g, ' ')}</span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-lg font-black ${gradeTextColors[info.grade] || 'text-red-400'}`}>{info.grade}</span>
+                              <span className="text-[10px] text-zinc-500">{info.score}pts</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs font-semibold ${N(info.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt$(info.pnl)}</span>
+                            <span className="text-[10px] text-zinc-600 text-right max-w-[180px] truncate">{info.action}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                </div>
+              </div>
+            )}
+
+            {/* Top Tickers from Pattern Detection */}
+            {intel?.patterns?.best_tickers?.length > 0 && (
+              <div className="mt-4">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
+                  <Flame className="w-3 h-3" /> Top Performing Tickers
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {intel.patterns.best_tickers.slice(0, 6).map((t, i) => (
+                    <div key={i} className={`px-3 py-2 rounded-xl border text-xs ${N(t.pnl) >= 0 ? 'border-emerald-500/20 bg-emerald-500/[0.06]' : 'border-red-500/20 bg-red-500/[0.06]'}`}>
+                      <span className="font-bold text-zinc-200">{t.ticker}</span>
+                      <span className={`ml-2 font-semibold ${N(t.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt$(t.pnl)}</span>
+                      <span className="ml-2 text-zinc-500">{t.win_rate}% WR · {t.trades} trades</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ═══ NATURALNESS ENGINE ═══ */}
+            {intel?.naturalness && (
+              <div className="mt-4">
+                <div className="flex items-center gap-1.5 mb-3">
+                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/20">
+                    <Brain className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Market Naturalness</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Main Score Card */}
+                  <div className="p-4 rounded-xl bg-black/30 border border-white/[0.03]">
+                    <div className="text-[10px] uppercase tracking-wider text-zinc-600 mb-2">Market Score</div>
+                    <div className={`text-4xl font-black ${
+                      N(intel.naturalness.market_score) > 70 ? 'text-emerald-400' :
+                      N(intel.naturalness.market_score) >= 40 ? 'text-amber-400' :
+                      'text-red-400'
+                    }`}>
+                      {N(intel.naturalness.market_score).toFixed(1)}
+                    </div>
+                    <div className={`mt-1 text-xs font-semibold px-2 py-0.5 rounded-full inline-block ${
+                      intel.naturalness.market_regime === 'trending' ? 'bg-cyan-500/15 text-cyan-400' :
+                      intel.naturalness.market_regime === 'mean_reverting' ? 'bg-violet-500/15 text-violet-400' :
+                      intel.naturalness.market_regime === 'chaotic' ? 'bg-red-500/15 text-red-400' :
+                      'bg-zinc-500/15 text-zinc-400'
+                    }`}>
+                      {intel.naturalness.market_regime?.toUpperCase().replace(/_/g, ' ')}
+                    </div>
+                    {N(intel.naturalness.market_score) > 70 && (
+                      <div className="mt-2 text-[10px] text-emerald-400/70">Market behaving naturally</div>
+                    )}
+                    {N(intel.naturalness.market_score) >= 40 && N(intel.naturalness.market_score) <= 70 && (
+                      <div className="mt-2 text-[10px] text-amber-400/70">Mild deviations detected</div>
+                    )}
+                    {N(intel.naturalness.market_score) < 40 && (
+                      <div className="mt-2 text-[10px] text-red-400/70">Significant anomaly</div>
+                    )}
+                  </div>
+
+                  {/* Anomaly Status + Position Scalars removed — not enough data with SPY+QQQ only */}
+                </div>
+
+                {/* Component Breakdown */}
+                {intel.naturalness.components && (
+                  <div className="mt-3 p-3 rounded-xl bg-black/30 border border-white/[0.03]">
+                    <div className="text-[10px] uppercase tracking-wider text-zinc-600 mb-2">Component Breakdown</div>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                      {Object.entries(intel.naturalness.components).map(([name, value]) => (
+                        <div key={name} className="text-center p-2 rounded-lg bg-white/[0.02]">
+                          <div className="text-[9px] uppercase text-zinc-500 mb-1">{name}</div>
+                          <div className={`text-sm font-bold ${
+                            N(value) >= 70 ? 'text-emerald-400' :
+                            N(value) >= 40 ? 'text-amber-400' :
+                            'text-red-400'
+                          }`}>
+                            {N(value).toFixed(0)}
+                          </div>
+                          <div className="mt-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${
+                              N(value) >= 70 ? 'bg-emerald-500' :
+                              N(value) >= 40 ? 'bg-amber-500' :
+                              'bg-red-500'
+                            }`} style={{ width: `${Math.min(100, N(value))}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </GlowCard>
+        )}
+
+        {/* ═══ STRATEGY LEADERBOARD ═══ */}
+        <GlowCard className="p-5">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                <Trophy className="w-5 h-5 text-yellow-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold tracking-tight">Strategy Leaderboard</h3>
+                <p className="text-[11px] text-zinc-500">Ranked by Sharpe ratio · Click to expand</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {Object.entries(typeIcons).slice(0, 5).map(([k, v]) => (
+                <span key={k} className={`text-[10px] px-2 py-1 rounded-lg ${v.color} font-medium`}>{v.icon} {k}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            {(Array.isArray(lb) ? lb : []).map((s, i) => {
+              const ti = typeIcons[s.type || s.strategy_type] || typeIcons.custom
+              const name = s.strategy || s.name || s.strategy_name
+              return (
+                <div key={name}>
+                  <div
+                    className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all duration-200 border ${expanded === name ? 'bg-white/[0.04] border-white/[0.08]' : 'bg-white/[0.015] border-transparent hover:bg-white/[0.03] hover:border-white/[0.04]'}`}
+                    onClick={() => toggle(name)}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <RankBadge rank={s.rank || i + 1} />
+                      <div>
+                        <div className="font-semibold text-sm flex items-center gap-2">
+                          <span>{name?.replace(/_/g, ' ')}</span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${statusBadge[s.status] || statusBadge.ACTIVE}`}>
+                            {s.status || 'ACTIVE'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-zinc-500 flex items-center gap-2 mt-0.5">
+                          <span className={`px-1.5 py-0.5 rounded ${ti.color} text-[10px] font-medium`}>{ti.icon} {s.type || s.strategy_type}</span>
+                          <span>·</span>
+                          <span>{N(s.total_trades)} trades</span>
+                          {N(s.starting_capital) > 0 && <><span>·</span><span>${(N(s.starting_capital)/1000).toFixed(0)}K capital</span></>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-5">
+                      <div className="text-right hidden sm:block">
+                        <div className="text-[10px] uppercase tracking-wider text-zinc-600">Win Rate</div>
+                        <div className={`text-sm font-bold ${N(s.win_rate) >= 60 ? 'text-emerald-400' : N(s.win_rate) >= 50 ? 'text-amber-400' : N(s.win_rate) > 0 ? 'text-red-400' : 'text-zinc-500'}`}>
+                          {N(s.win_rate).toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className="text-right min-w-[80px]">
+                        <div className="text-[10px] uppercase tracking-wider text-zinc-600">Realized</div>
+                        <div className={`text-sm font-bold ${N(s.total_pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {fmt$(s.total_pnl)}
+                        </div>
+                      </div>
+                      <div className="text-right min-w-[80px] hidden md:block">
+                        <div className="text-[10px] uppercase tracking-wider text-zinc-600">Unrealized</div>
+                        <div className={`text-sm font-bold ${N(unrealizedByStrategy[s.strategy || s.name || s.strategy_name]) >= 0 ? 'text-cyan-400' : 'text-amber-400'}`}>
+                          {fmt$(unrealizedByStrategy[s.strategy || s.name || s.strategy_name] || 0)}
+                        </div>
+                      </div>
+                      <div className="text-right hidden md:block">
+                        <div className="text-[10px] uppercase tracking-wider text-zinc-600">Sharpe</div>
+                        <div className={`text-sm font-bold ${N(s.sharpe) >= 2 ? 'text-emerald-400' : N(s.sharpe) >= 1 ? 'text-cyan-400' : 'text-zinc-400'}`}>
+                          {N(s.sharpe).toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="text-right hidden lg:block">
+                        <div className="text-[10px] uppercase tracking-wider text-zinc-600">PF</div>
+                        <div className="text-sm font-bold text-zinc-300">{N(s.profit_factor).toFixed(2)}</div>
+                      </div>
+                      {expanded === name ? <ChevronUp className="w-4 h-4 text-zinc-500" /> : <ChevronDown className="w-4 h-4 text-zinc-600" />}
+                    </div>
+                  </div>
+
+                  {/* Expanded Detail Panel */}
+                  {expanded === name && (
+                    <div className="ml-[52px] mt-1 mb-2 p-4 rounded-xl bg-black/30 border border-white/[0.04] animate-in slide-in-from-top-2 duration-200">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
+                        {[
+                          ['Avg Win', fmtPct(detail?.avg_win || detail?.metrics?.avg_win), 'text-emerald-400'],
+                          ['Avg Loss', fmtPct(detail?.avg_loss || detail?.metrics?.avg_loss), 'text-red-400'],
+                          ['Max DD', fmtPct(detail?.max_drawdown || detail?.metrics?.max_drawdown_pct), 'text-red-400'],
+                          ['Sortino', N(detail?.sortino || detail?.metrics?.sortino_ratio).toFixed(2), 'text-cyan-400'],
+                          ['Avg Hold', detail?.avg_hold_time || (N(detail?.metrics?.avg_hold_time_minutes).toFixed(0) + 'm') || '—', 'text-zinc-300'],
+                        ].map(([l, v, c]) => (
+                          <div key={l} className="p-2.5 rounded-lg bg-white/[0.02]">
+                            <div className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1">{l}</div>
+                            <div className={`text-sm font-semibold ${c}`}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Open Positions for this strategy */}
+                      {(detail?.positions?.length > 0) && (
+                        <div className="mb-3">
+                          <div className="text-[10px] uppercase tracking-wider text-zinc-600 mb-2">Open Positions ({detail.positions.length})</div>
+                          <div className="space-y-1 max-h-36 overflow-y-auto">
+                            {detail.positions.map((pos, j) => {
+                              const duration = pos.entry_time 
+                                ? (new Date() - new Date(pos.entry_time)) / 60000 
+                                : pos.duration_minutes || 0
+                              const timeRemaining = pos.target_exit_time || pos.expiration_date
+                              return (
+                                <div key={j} className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors border border-transparent hover:border-white/[0.04]">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold min-w-[50px]">{pos.symbol}</span>
+                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${pos.direction === 'LONG' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>{pos.direction}</span>
+                                    <span className="text-zinc-500">{N(pos.quantity)} shares</span>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    {/* Duration */}
+                                    <span className="text-[10px] text-zinc-400 flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {fmtDuration(duration)}
+                                    </span>
+                                    {/* Time Remaining */}
+                                    <span className={`text-[10px] flex items-center gap-1 ${timeRemaining ? getTimeColor(timeRemaining) : 'text-zinc-500'}`}>
+                                      → {fmtTimeRemaining(timeRemaining)}
+                                    </span>
+                                    <span className={`font-semibold ${N(pos.unrealized_pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt$(pos.unrealized_pnl)}</span>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {(detail?.recent_trades?.length > 0) && (
+                        <div>
+                          <div className="text-[10px] uppercase tracking-wider text-zinc-600 mb-2">Recent Trades</div>
+                          <div className="space-y-1 max-h-36 overflow-y-auto">
+                            {detail.recent_trades.slice(0, 5).map((t, j) => (
+                              <div key={j} className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                                <span className="font-semibold min-w-[50px]">{t.symbol}</span>
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${t.direction === 'LONG' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>{t.direction}</span>
+                                <span className={`font-semibold ${N(t.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt$(t.pnl)}</span>
+                                <span className="text-zinc-600 text-[10px]">{t.exit_reason}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {(!detail?.recent_trades || detail.recent_trades.length === 0) && (
+                        <div className="text-center text-zinc-600 text-xs py-3">No trades yet for this strategy</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          {lb.length === 0 && (
+            <div className="text-center py-12 text-zinc-600">
+              <Cpu className="w-8 h-8 mx-auto mb-3 opacity-30" />
+              <p>No strategies registered yet</p>
+              <p className="text-[11px] mt-1">{getMarketStatus().label}</p>
+            </div>
+          )}
+        </GlowCard>
+
+        {/* ═══ DAY TRADING COMMAND CENTER ═══ */}
+        <GlowCard glow="bg-gradient-to-r from-amber-500/20 to-orange-500/20" className="p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/20">
+                <Zap className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold tracking-tight">Day Trading Command Center</h3>
+                <p className="text-[11px] text-zinc-500">
+                  {dayTrading?.today?.date || 'Today'} · Intraday strategies (&lt;4h hold)
+                </p>
+              </div>
+            </div>
+            {dayTrading?.today && (
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-bold px-3 py-1 rounded-lg ${N(dayTrading.today.pnl) >= 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                  {fmt$(dayTrading.today.pnl)} today
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Top metrics row */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+            <MetricCard
+              label="Today's P&L"
+              value={fmt$(dayTrading?.today?.pnl || 0)}
+              color={N(dayTrading?.today?.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}
+              icon={DollarSign}
+              sub={`${dayTrading?.today?.trades || 0} trades`}
+              tooltip="Total P&L from day trades today"
+            />
+            <MetricCard
+              label="Win Rate"
+              value={(N(dayTrading?.today?.win_rate) * 100).toFixed(1) + '%'}
+              color={N(dayTrading?.today?.win_rate) >= 0.5 ? 'text-emerald-400' : N(dayTrading?.today?.win_rate) > 0 ? 'text-amber-400' : 'text-zinc-500'}
+              icon={Target}
+              sub={`${dayTrading?.today?.wins || 0}W / ${dayTrading?.today?.losses || 0}L`}
+              tooltip="Today's intraday win rate"
+            />
+            <MetricCard
+              label="Trades"
+              value={dayTrading?.today?.trades || 0}
+              color="text-cyan-400"
+              icon={Activity}
+              sub={`Vol: ${(dayTrading?.today?.total_volume || 0).toLocaleString()} shares`}
+              tooltip="Number of day trades completed today"
+            />
+            <MetricCard
+              label="Avg Hold"
+              value={N(dayTrading?.today?.avg_hold_min).toFixed(1) + 'm'}
+              color="text-violet-400"
+              icon={Clock}
+              sub="target < 60m"
+              tooltip="Average hold time for today's day trades"
+            />
+            <MetricCard
+              label="Streak"
+              value={(N(dayTrading?.streak) > 0 ? '+' : '') + N(dayTrading?.streak)}
+              color={N(dayTrading?.streak) > 0 ? 'text-emerald-400' : N(dayTrading?.streak) < 0 ? 'text-red-400' : 'text-zinc-500'}
+              icon={Flame}
+              sub={N(dayTrading?.streak) > 0 ? 'winning' : N(dayTrading?.streak) < 0 ? 'losing' : 'neutral'}
+              tooltip="Current consecutive win/loss streak"
+            />
+          </div>
+
+          {/* Session P&L by Hour */}
+          {dayTrading?.session_pnl_by_hour && Object.keys(dayTrading.session_pnl_by_hour).length > 0 && (
+            <div className="mb-5">
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2">Session P&L by Hour</div>
+              <div className="flex items-end gap-1 h-24 px-1">
+                {(() => {
+                  const hours = dayTrading.session_pnl_by_hour
+                  const maxAbs = Math.max(...Object.values(hours).map(v => Math.abs(N(v))), 1)
+                  return Object.entries(hours).map(([hr, pnl]) => {
+                    const pct = (Math.abs(N(pnl)) / maxAbs) * 100
+                    const isGreen = N(pnl) >= 0
+                    return (
+                      <div key={hr} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                        <div className="absolute -top-8 hidden group-hover:block text-[10px] bg-black/90 border border-white/10 px-2 py-1 rounded-lg whitespace-nowrap z-20 shadow-xl">
+                          <div className="font-semibold">{hr}:00</div>
+                          <div className={isGreen ? 'text-emerald-400' : 'text-red-400'}>{fmt$(pnl)}</div>
+                        </div>
+                        <div
+                          className={`w-full rounded-t-sm transition-all duration-300 hover:opacity-100 opacity-80 ${isGreen ? 'bg-gradient-to-t from-emerald-600/50 to-emerald-400/30' : 'bg-gradient-to-t from-red-600/50 to-red-400/30'}`}
+                          style={{ height: Math.max(4, pct) + '%' }}
+                        />
+                        <span className="text-[8px] text-zinc-600 mt-1">{hr}</span>
+                      </div>
+                    )
+                  })
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* Day Trading Strategy Cards */}
+          {dayTrading?.active_day_strategies?.length > 0 && (
+            <div className="mb-5">
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
+                <Cpu className="w-3 h-3" /> Day Trading Strategies ({dayTrading.active_day_strategies.length})
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {dayTrading.active_day_strategies.map((s, i) => {
+                  const statusColors = {
+                    VALIDATED: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                    TESTING: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+                    FAILING: 'bg-red-500/15 text-red-400 border-red-500/30',
+                  }
+                  return (
+                    <div key={i} className="p-4 rounded-xl bg-black/40 border border-white/[0.04] hover:border-white/[0.08] transition-all duration-300">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-semibold text-zinc-200">{s.name?.replace(/_/g, ' ')}</span>
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold border ${statusColors[s.status] || statusColors.TESTING}`}>
+                          {s.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+                          <div className="text-[9px] text-zinc-500 uppercase">Today</div>
+                          <div className={`text-sm font-bold ${N(s.today_pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt$(s.today_pnl)}</div>
+                          <div className="text-[9px] text-zinc-600">{s.today_trades} trades</div>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+                          <div className="text-[9px] text-zinc-500 uppercase">Win Rate</div>
+                          <div className={`text-sm font-bold ${N(s.win_rate) >= 0.5 ? 'text-emerald-400' : 'text-amber-400'}`}>{(N(s.win_rate) * 100).toFixed(1)}%</div>
+                          <div className="text-[9px] text-zinc-600">PF {s.profit_factor}</div>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+                          <div className="text-[9px] text-zinc-500 uppercase">Avg Hold</div>
+                          <div className="text-sm font-bold text-violet-400">{N(s.avg_hold_min).toFixed(0)}m</div>
+                          <div className="text-[9px] text-zinc-600">{s.total_trades} total</div>
+                        </div>
+                      </div>
+                      {/* Validation progress bar */}
+                      <div>
+                        <div className="flex items-center justify-between text-[9px] mb-1">
+                          <span className="text-zinc-500">Validation: {s.total_trades}/30 trades</span>
+                          <span className="text-zinc-400">{s.validation_score}pts</span>
+                        </div>
+                        <div className="h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${s.status === 'VALIDATED' ? 'bg-emerald-500' : s.status === 'FAILING' ? 'bg-red-500' : 'bg-amber-500'}`}
+                            style={{ width: `${Math.min(100, (s.total_trades / 30) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Today's Intraday Trades */}
+          {dayTrading?.intraday_trades?.length > 0 ? (
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
+                <Radio className="w-3 h-3" /> Today's Trades ({dayTrading.intraday_trades.length})
+              </div>
+              <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+                {dayTrading.intraday_trades.map((t, i) => (
+                  <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors text-xs border border-transparent hover:border-white/[0.04]">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-1 h-6 rounded-full flex-shrink-0 ${N(t.pnl) >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                      <span className="font-bold min-w-[50px]">{t.symbol}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${t.direction === 'LONG' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>{t.direction}</span>
+                      <span className="text-zinc-500 text-[10px]">{t.strategy?.replace(/_/g, ' ')}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1"><Clock className="w-3 h-3" />{t.hold_min}m</span>
+                      <span className={`font-semibold ${N(t.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt$(t.pnl)}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${{
+                        stop_loss: 'text-red-400 bg-red-500/10',
+                        take_profit: 'text-emerald-400 bg-emerald-500/10',
+                        trailing_stop: 'text-amber-400 bg-amber-500/10',
+                      }[t.exit_reason] || 'text-zinc-500 bg-zinc-500/10'}`}>{(t.exit_reason || '').replace(/_/g, ' ')}</span>
+                      <span className="text-[10px] text-zinc-600">{t.exit_time ? new Date(t.exit_time).toLocaleTimeString() : ''}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-zinc-700">
+              <Zap className="w-8 h-8 mb-3 opacity-30" />
+              <p className="text-sm">No day trades yet today</p>
+              <p className="text-[11px] mt-1">
+                {dayTrading?.week?.trades ? `${dayTrading.week.trades} day trades this week · ${fmt$(dayTrading.week.pnl)}` : 'Waiting for intraday signals'}
+              </p>
+            </div>
+          )}
+
+          {/* Week summary footer */}
+          {dayTrading?.week && (
+            <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between text-[11px]">
+              <span className="text-zinc-600">7-day: {dayTrading.week.trades} trades · {(N(dayTrading.week.win_rate) * 100).toFixed(1)}% WR · avg hold {N(dayTrading.week.avg_hold_min).toFixed(0)}m</span>
+              <span className={N(dayTrading.week.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}>{fmt$(dayTrading.week.pnl)} this week</span>
+            </div>
+          )}
+        </GlowCard>
+
+        {/* ═══ OPTIONS & SHORT TRADING ═══ */}
+        <GlowCard glow="bg-gradient-to-r from-red-500/20 via-violet-500/20 to-red-500/20" className="p-5">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-violet-500/20 border border-red-500/20">
+                <BarChart3 className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold tracking-tight">Options & Short Trading</h3>
+                <p className="text-[11px] text-zinc-500">
+                  {optionsData?.strategies?.length || 0} strategies · {(optionsData?.summary?.total_signals || 0) + (optionsData?.summary?.active_signals || 0)} signals
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] px-2 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 font-medium">OPTIONS</span>
+              <span className="text-[10px] px-2 py-1 rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20 font-medium">SHORT</span>
+            </div>
+          </div>
+
+          {/* Top Metrics Row */}
+          {optionsData?.summary && (
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-5">
+              <MetricCard
+                label="Active Strategies"
+                value={optionsData.summary.total_strategies || 0}
+                color="text-red-400"
+                icon={Target}
+                sub={`of ${optionsData.strategies?.length || 0} total`}
+                tooltip="Number of active options & short selling strategies"
+              />
+              <MetricCard
+                label="Total Signals"
+                value={optionsData.summary.total_signals || 0}
+                color="text-violet-400"
+                icon={Activity}
+                sub="generated today"
+                tooltip="Options and short signals generated in today's session"
+              />
+              <MetricCard
+                label="Open Positions"
+                value={optionsData.summary.open_positions || 0}
+                color="text-orange-400"
+                icon={Eye}
+                sub="currently open"
+                tooltip="Currently open options contracts and short positions"
+              />
+              <MetricCard
+                label="P&L"
+                value={fmt$(optionsData.summary.total_pnl)}
+                color={N(optionsData.summary.total_pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}
+                icon={DollarSign}
+                sub="total return"
+                tooltip="Combined P&L from all options and short positions"
+              />
+              <MetricCard
+                label="Win Rate"
+                value={(N(optionsData.summary.overall_win_rate) * 100).toFixed(1) + '%'}
+                color={N(optionsData.summary.overall_win_rate) >= 0.5 ? 'text-emerald-400' : 'text-amber-400'}
+                icon={CheckCircle}
+                sub="success rate"
+                tooltip="Win rate across all closed options and short trades"
+              />
+              <MetricCard
+                label="Avg Premium"
+                value={'$' + N(optionsData.summary.avg_premium).toFixed(2)}
+                color="text-cyan-400"
+                icon={TrendingUp}
+                sub="per contract"
+                tooltip="Average premium collected or paid per options contract"
+              />
+            </div>
+          )}
+
+          {/* Strategy Cards Grid */}
+          {optionsData?.strategies && optionsData.strategies.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+              {optionsData.strategies.map((strategy, i) => (
+                <div key={i} className="p-4 rounded-xl bg-black/40 border border-white/[0.04] hover:border-white/[0.08] transition-all duration-300">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="font-semibold text-sm text-zinc-200">{strategy.name?.replace(/_/g, ' ')}</div>
+                      <div className="text-[10px] text-zinc-500 mt-0.5 line-clamp-1">{strategy.description}</div>
+                    </div>
+                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${
+                      strategy.status === 'ACTIVE' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
+                      strategy.status === 'SCANNING' ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' :
+                      strategy.status === 'PAUSED' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' :
+                      'bg-zinc-500/15 text-zinc-400 border border-zinc-500/30'
+                    }`}>
+                      {strategy.status}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+                      <div className="text-[10px] text-zinc-500 uppercase">Signals</div>
+                      <div className="text-sm font-bold text-zinc-300">{strategy.signals || 0}</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+                      <div className="text-[10px] text-zinc-500 uppercase">Positions</div>
+                      <div className="text-sm font-bold text-zinc-300">{strategy.positions || 0}</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg bg-white/[0.02]">
+                      <div className="text-[10px] text-zinc-500 uppercase">Win Rate</div>
+                      <div className={`text-sm font-bold ${N(strategy.win_rate) >= 50 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        {(N(strategy.win_rate)).toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs px-2 py-1 rounded-lg font-medium ${
+                      strategy.type === 'options' ? 'bg-red-500/10 text-red-400' : 'bg-violet-500/10 text-violet-400'
+                    }`}>
+                      {strategy.type === 'options' ? '📊 OPTIONS' : '📉 SHORT'}
+                    </span>
+                    <span className={`text-sm font-bold ${N(strategy.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {fmt$(strategy.pnl)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Open Options/Short Positions */}
+          {optionsData?.positions && optionsData.positions.length > 0 && (
+            <div className="mb-5">
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
+                <Eye className="w-3 h-3" /> Open Positions ({optionsData.positions.length})
+              </div>
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {optionsData.positions.map((pos, i) => {
+                  const duration = pos.entry_time 
+                    ? (new Date() - new Date(pos.entry_time)) / 60000 
+                    : pos.duration_minutes || 0
+                  const timeRemaining = pos.type === 'option' 
+                    ? pos.expiration_date 
+                    : pos.target_exit_time
+                  const isOption = pos.type === 'option' || pos.type === 'call' || pos.type === 'put'
+                  return (
+                    <div key={i} className="p-3 rounded-xl bg-black/40 border border-white/[0.04] hover:border-white/[0.08] transition-all">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-sm text-zinc-200">{pos.symbol}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            pos.direction === 'LONG' ? 'bg-emerald-500/10 text-emerald-400' : 
+                            pos.direction === 'SHORT' ? 'bg-red-500/10 text-red-400' :
+                            'bg-cyan-500/10 text-cyan-400'
+                          }`}>
+                            {pos.direction}
+                          </span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            isOption ? 'bg-red-500/10 text-red-400' : 'bg-violet-500/10 text-violet-400'
+                          }`}>
+                            {isOption ? '📊 OPTION' : '📉 SHORT'}
+                          </span>
+                          {pos.strike > 0 && (
+                            <span className="text-zinc-500 text-xs">Strike: ${pos.strike}</span>
+                          )}
+                        </div>
+                        <span className={`text-sm font-bold ${N(pos.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {fmt$(pos.pnl)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-4">
+                          {/* Duration */}
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="w-3 h-3 text-zinc-600" />
+                            <span className="text-zinc-500">Held:</span>
+                            <span className="text-zinc-300">{fmtDuration(duration)}</span>
+                          </div>
+                          {/* Time Remaining */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-zinc-600">→</span>
+                            <span className="text-zinc-500">{isOption ? 'Expires:' : 'Target:'}</span>
+                            <span className={timeRemaining ? getTimeColor(timeRemaining) : 'text-zinc-500'}>
+                              {fmtTimeRemaining(timeRemaining)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-zinc-500">Qty: {pos.quantity || pos.contracts || 1}</span>
+                          <span className="text-cyan-400">${N(pos.premium || pos.entry_price).toFixed(2)}</span>
+                          {pos.confidence && (
+                            <span className="text-zinc-500">{N(pos.confidence).toFixed(0)}% conf</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Options Signals */}
+          {optionsData?.signals && optionsData.signals.length > 0 && (
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
+                <Radio className="w-3 h-3" /> Recent Signals
+              </div>
+              <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+                {optionsData.signals.slice(0, 10).map((signal, i) => {
+                  const duration = signal.entry_time 
+                    ? (new Date() - new Date(signal.entry_time)) / 60000 
+                    : signal.duration_minutes || 0
+                  const timeRemaining = signal.type === 'option' 
+                    ? signal.expiration_date 
+                    : signal.target_exit_time
+                  return (
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors text-xs border border-transparent hover:border-white/[0.04]">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-zinc-300 min-w-[80px]">{signal.strategy}</span>
+                        <span className="font-semibold min-w-[60px]">{signal.symbol}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          signal.direction === 'LONG' ? 'bg-emerald-500/10 text-emerald-400' : 
+                          signal.direction === 'SHORT' ? 'bg-red-500/10 text-red-400' :
+                          'bg-cyan-500/10 text-cyan-400'
+                        }`}>
+                          {signal.direction}
+                        </span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                          signal.type === 'call' ? 'bg-green-500/10 text-green-400' :
+                          signal.type === 'put' ? 'bg-red-500/10 text-red-400' :
+                          signal.type === 'short' ? 'bg-violet-500/10 text-violet-400' :
+                          'bg-zinc-500/10 text-zinc-400'
+                        }`}>
+                          {signal.type?.toUpperCase()}
+                        </span>
+                        {signal.strike > 0 && (
+                          <span className="text-zinc-500">@${signal.strike}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {/* Duration */}
+                        <div className="flex items-center gap-1 text-[10px]">
+                          <Clock className="w-3 h-3 text-zinc-600" />
+                          <span className="text-zinc-400">{fmtDuration(duration)}</span>
+                        </div>
+                        {/* Time Remaining */}
+                        <div className={`flex items-center gap-1 text-[10px] font-medium ${timeRemaining ? getTimeColor(timeRemaining) : 'text-zinc-500'}`}>
+                          <span className="text-zinc-600">→</span>
+                          {fmtTimeRemaining(timeRemaining)}
+                        </div>
+                        <span className="text-cyan-400">${N(signal.premium).toFixed(2)}</span>
+                        <span className="text-zinc-500">{N(signal.confidence).toFixed(0)}% conf</span>
+                        <span className="text-zinc-600 text-[10px]">
+                          {signal.timestamp ? new Date(signal.timestamp).toLocaleTimeString() : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {(!optionsData || (!optionsData.strategies?.length && !optionsData.signals?.length)) && (
+            <div className="flex flex-col items-center justify-center py-8 text-zinc-700">
+              <BarChart3 className="w-8 h-8 mb-3 opacity-30" />
+              <p className="text-sm">No options data available</p>
+              <p className="text-[11px] mt-1">{getMarketStatus().label}</p>
+            </div>
+          )}
+        </GlowCard>
+
+        {/* ═══ POSITIONS + TRADES GRID ═══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Open Positions */}
+          <GlowCard className="p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                <Activity className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <h3 className="font-bold">Open Positions</h3>
+                <p className="text-[11px] text-zinc-500">{pos.length} active across all strategies</p>
+              </div>
+            </div>
+            {pos.length > 0 ? (
+              <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+                {pos.map((p, i) => {
+                  const entryTime = p.entry_time ? new Date(p.entry_time) : null
+                  const durationMs = entryTime ? (new Date() - entryTime) : 0
+                  const durationMins = durationMs / 60000
+                  // Options expiration: use expiration_time if set, else entry + 30d for options/SHORT
+                  const expiry = p.expiration_time
+                    ? new Date(p.expiration_time)
+                    : (p.trade_type === 'option' || p.strategy?.includes('ETF_'))
+                      ? new Date((entryTime || new Date()).getTime() + 30 * 86400000)
+                      : null
+                  const entryFmt = entryTime
+                    ? entryTime.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : '—'
+                  // Stop distance %
+                  const cur = N(p.current_price || p.entry_price)
+                  const sl = N(p.stop_loss)
+                  const tp = N(p.take_profit)
+                  const slDist = (sl > 0 && cur > 0)
+                    ? (p.direction === 'LONG' ? ((cur - sl) / cur * 100) : ((sl - cur) / cur * 100))
+                    : null
+                  const tpDist = (tp > 0 && cur > 0)
+                    ? (p.direction === 'LONG' ? ((tp - cur) / cur * 100) : ((cur - tp) / cur * 100))
+                    : null
+                  return (
+                    <div key={i} className="p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors border border-transparent hover:border-white/[0.04]">
+                      {/* Row 1: Symbol + direction + P&L */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${p.direction === 'LONG' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                            {p.direction === 'LONG' ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" /> : <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />}
+                          </div>
+                          <div>
+                            <div className="font-bold text-sm">{p.symbol}</div>
+                            <div className="text-[10px] text-zinc-500">{(p.strategy || p.strategy_name)?.replace(/ETF_|_/g, ' ').trim()} · qty {N(p.quantity)}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-sm font-bold ${N(p.unrealized_pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {N(p.unrealized_pnl) >= 0 ? '+' : ''}{fmt$(p.unrealized_pnl)}
+                          </div>
+                          <div className={`text-[11px] font-medium ${N(p.unrealized_pnl_pct) >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                            {(N(p.unrealized_pnl_pct) * 100).toFixed(2)}%
+                          </div>
+                        </div>
+                      </div>
+                      {/* Row 2: Entry details */}
+                      <div className="mt-2 flex items-center gap-3 flex-wrap text-[10px]">
+                        <span className="flex items-center gap-1 text-zinc-400">
+                          <Clock className="w-3 h-3" />
+                          In: <span className="text-zinc-300 font-medium">{entryFmt}</span>
+                        </span>
+                        <span className="text-zinc-600">·</span>
+                        <span className="text-zinc-400">
+                          Held: <span className="text-zinc-300 font-medium">{fmtDuration(durationMins)}</span>
+                        </span>
+                        {expiry && (
+                          <>
+                            <span className="text-zinc-600">·</span>
+                            <span className={`flex items-center gap-1 ${getTimeColor(expiry)}`}>
+                              Exp: <span className="font-medium">{fmtTimeRemaining(expiry)}</span>
+                            </span>
+                          </>
+                        )}
+                        <span className="text-zinc-600">·</span>
+                        <span className="text-zinc-400">
+                          @<span className="text-zinc-300 font-medium">${N(p.entry_price).toFixed(2)}</span>
+                        </span>
+                      </div>
+                      {/* Row 3: SL / TP targets */}
+                      <div className="mt-1.5 flex items-center gap-3 text-[10px]">
+                        {sl > 0 && (
+                          <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-500/10 ${slDist !== null && slDist < 2 ? 'text-red-300 font-bold' : 'text-red-400'}`}>
+                            SL ${sl.toFixed(2)}{slDist !== null ? ` (${slDist.toFixed(1)}% away)` : ''}
+                          </span>
+                        )}
+                        {tp > 0 && (
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400">
+                            TP ${tp.toFixed(2)}{tpDist !== null ? ` (+${tpDist.toFixed(1)}%)` : ''}
+                          </span>
+                        )}
+                        {!sl && !tp && <span className="text-zinc-600 italic">No stops set</span>}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
+                <Eye className="w-8 h-8 mb-3 opacity-30" />
+                <p className="text-sm">No open positions</p>
+                <p className="text-[11px] mt-1">{getMarketStatus().label}</p>
+              </div>
+            )}
+          </GlowCard>
+
+          {/* Recent Trades */}
+          <GlowCard className="p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                <BarChart3 className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <h3 className="font-bold">Recent Trades</h3>
+                <p className="text-[11px] text-zinc-500">Last 7 days · {trades.length} trades</p>
+              </div>
+            </div>
+            {trades.length > 0 ? (
+              <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+                {trades.slice(0, 20).map((t, i) => {
+                  const holdMins = t.hold_duration_minutes || (
+                    t.entry_time && t.exit_time
+                      ? (new Date(t.exit_time) - new Date(t.entry_time)) / 60000
+                      : 0
+                  )
+                  const entryFmt = t.entry_time
+                    ? new Date(t.entry_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : '—'
+                  const exitFmt = t.exit_time
+                    ? new Date(t.exit_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : '—'
+                  const reasonColor = {
+                    stop_loss: 'text-red-400 bg-red-500/10',
+                    take_profit: 'text-emerald-400 bg-emerald-500/10',
+                    trailing_stop: 'text-amber-400 bg-amber-500/10',
+                    manual: 'text-zinc-400 bg-zinc-500/10',
+                    signal: 'text-blue-400 bg-blue-500/10',
+                  }[t.exit_reason] || 'text-zinc-500 bg-zinc-500/10'
+                  return (
+                    <div key={i} className="p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors border border-transparent hover:border-white/[0.04]">
+                      {/* Row 1: Symbol + direction + realized P&L */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-1 h-8 rounded-full flex-shrink-0 ${N(t.pnl) >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                          <div>
+                            <div className="text-sm font-bold flex items-center gap-1.5">
+                              {t.symbol}
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${t.direction === 'LONG' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>{t.direction}</span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${reasonColor}`}>{(t.exit_reason || '').replace(/_/g,' ')}</span>
+                            </div>
+                            <div className="text-[10px] text-zinc-500">{(t.strategy || t.strategy_name)?.replace(/ETF_|_/g, ' ').trim()}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-sm font-bold ${N(t.pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {N(t.pnl) >= 0 ? '+' : ''}{fmt$(t.pnl)}
+                          </div>
+                          <div className={`text-[11px] font-medium ${N(t.pnl_pct) >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                            {(N(t.pnl_pct) * 100).toFixed(2)}%
+                          </div>
+                        </div>
+                      </div>
+                      {/* Row 2: Entry → Exit timeline */}
+                      <div className="mt-1.5 flex items-center gap-2 text-[10px] text-zinc-500 flex-wrap">
+                        <span>In: <span className="text-zinc-300">{entryFmt}</span></span>
+                        <span className="text-zinc-700">→</span>
+                        <span>Out: <span className="text-zinc-300">{exitFmt}</span></span>
+                        <span className="text-zinc-700">·</span>
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /><span className="text-zinc-300">{fmtDuration(holdMins)}</span></span>
+                      </div>
+                      {/* Row 3: Entry / Exit prices */}
+                      <div className="mt-1 flex items-center gap-3 text-[10px]">
+                        <span className="text-zinc-500">Entry <span className="text-zinc-200 font-medium">${N(t.entry_price).toFixed(2)}</span></span>
+                        <span className="text-zinc-700">→</span>
+                        <span className="text-zinc-500">Exit <span className="text-zinc-200 font-medium">${N(t.exit_price).toFixed(2)}</span></span>
+                        <span className="text-zinc-700">·</span>
+                        <span className="text-zinc-500">qty <span className="text-zinc-300">{t.quantity}</span></span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
+                <BarChart3 className="w-8 h-8 mb-3 opacity-30" />
+                <p className="text-sm">No trades yet</p>
+                <p className="text-[11px] mt-1">{getMarketStatus().label}</p>
+              </div>
+            )}
+          </GlowCard>
+        </div>
+
+        {/* ═══ GLOBAL MARKETS ═══ */}
+        {globalData && (
+          <GlowCard glow="bg-gradient-to-r from-blue-500/20 to-emerald-500/20" className="p-5">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <Globe className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold tracking-tight">Global Markets</h3>
+                  <p className="text-[11px] text-zinc-500">
+                    {globalData.coverage?.currently_open || 0} exchange{globalData.coverage?.currently_open !== 1 ? 's' : ''} open · {globalData.accuracy?.total_signals || 0} signals tracked
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                  1H: {N(globalData.accuracy?.accuracy_1h).toFixed(1)}%
+                </span>
+                {globalData.accuracy?.accuracy_4h > 0 && (
+                  <span className="text-[10px] px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold">
+                    4H: {N(globalData.accuracy?.accuracy_4h).toFixed(1)}%
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Exchange Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+              {(globalData.exchanges || []).map(ex => {
+                const signalCount = (globalData.by_exchange || []).find(b => b.exchange === ex.code)?.count || 0
+                const hasSignals = signalCount > 0
+                const isActive = ex.is_open || hasSignals
+                // Determine exchange status label
+                const getExchangeLabel = () => {
+                  if (ex.is_open) return null
+                  if (!ex.hours) return 'Closed'
+                  const parts = ex.hours.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/)
+                  if (!parts) return 'Closed'
+                  const openH = parseInt(parts[1]), openM = parseInt(parts[2])
+                  const closeH = parseInt(parts[3]), closeM = parseInt(parts[4])
+                  const localParts = (ex.local_time || '').match(/(\d{1,2}):(\d{2})/)
+                  if (!localParts) return 'Closed'
+                  const nowH = parseInt(localParts[1]), nowM = parseInt(localParts[2])
+                  const nowMins = nowH * 60 + nowM
+                  const openMins = openH * 60 + openM
+                  const closeMins = closeH * 60 + closeM
+                  if (nowMins > closeMins && nowMins < closeMins + 120) return 'After Hours'
+                  if (nowMins >= openMins - 90 && nowMins < openMins) return 'Pre-Market'
+                  return 'Closed'
+                }
+                const statusLabel = getExchangeLabel()
+                return (
+                  <div key={ex.code} className={`p-3 rounded-xl border transition-all duration-300 ${isActive ? 'bg-emerald-500/[0.06] border-emerald-500/20 shadow-emerald-500/5 shadow-lg' : 'bg-white/[0.02] border-white/[0.04]'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold">{ex.code}</span>
+                      <div className="flex items-center gap-1.5">
+                        {statusLabel && (
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                            statusLabel === 'After Hours' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20' :
+                            statusLabel === 'Pre-Market' ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/20' :
+                            'bg-zinc-500/15 text-zinc-400 border border-zinc-500/20'
+                          }`}>
+                            {statusLabel}
+                          </span>
+                        )}
+                        <span className="relative flex h-2 w-2">
+                          {isActive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />}
+                          <span className={`relative inline-flex rounded-full h-2 w-2 ${isActive ? 'bg-emerald-500' : 'bg-zinc-600'}`} />
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-zinc-500 mb-1">{ex.region} · {ex.currency}</div>
+                    <div className="text-[10px] text-zinc-600">{ex.local_time} · {ex.hours}</div>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-[10px] text-zinc-500">{signalCount} signal{signalCount !== 1 ? 's' : ''}</span>
+                      {hasSignals && !ex.is_open && (
+                        <span className="text-[9px] text-emerald-400 font-medium">ACTIVE</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Recent Global Signals */}
+            {(globalData.signals || []).length > 0 && (
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-zinc-600 mb-2">Latest Signals</div>
+                <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                  {(globalData.signals || []).slice(0, 10).map((s, i) => (
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors text-xs">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-zinc-300 min-w-[45px]">{s.exchange}</span>
+                        <span className="font-semibold min-w-[80px]">{s.symbol}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${s.direction === 'long' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                          {s.direction?.toUpperCase()}
+                        </span>
+                        <span className="text-zinc-500">{s.strategy}</span>
+                      </div>
+                      <div className="text-right text-zinc-500">
+                        <span>${N(s.entry_price).toFixed(2)}</span>
+                        <span className="ml-2 text-[10px]">{new Date(s.signal_time).toLocaleTimeString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </GlowCard>
+        )}
+
+        {/* ═══ DAILY P&L ═══ */}
+        <GlowCard className="p-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <TrendingUp className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <h3 className="font-bold">Daily P&L</h3>
+              <p className="text-[11px] text-zinc-500">Combined performance across all strategies</p>
+            </div>
+          </div>
+          {effectiveDailyPnl.length > 0 ? (
+            <>
+              <PnLChart data={effectiveDailyPnl.slice(-30)} height={180} />
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
+                <div className="flex items-center gap-4">
+                  {effectiveDailyPnl.slice(-3).reverse().map((d, i) => (
+                    <div key={i} className="text-[10px]">
+                      <span className="text-zinc-500">{d.date}: </span>
+                      <span className={N(d.pnl || d.daily_pnl) >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>
+                        {fmt$(d.pnl || d.daily_pnl)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-[10px] text-zinc-500">
+                  {effectiveDailyPnl.length} days tracked
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
+              <TrendingUp className="w-8 h-8 mb-3 opacity-30" />
+              <p className="text-sm">No daily P&L data yet</p>
+              <p className="text-[11px] mt-1">Will populate as trades close</p>
+            </div>
+          )}
+        </GlowCard>
+
+        {/* Footer */}
+        <div className="text-center py-6">
+          <p className="text-[11px] text-zinc-700">
+            SYGNL Paper Trading Engine v2.0 · {lb.length} strategies · {totalTrades} total trades · {globalData ? '6 exchanges' : ''} · 24/7 Global Coverage
+          </p>
+        </div>
+      </main>
+    </div>
+  )
+}

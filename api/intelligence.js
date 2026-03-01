@@ -2,7 +2,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const OVH_API_BASE = process.env.OVH_API_URL || 'http://148.113.174.184:8000'
+const OVH_API_BASE = process.env.OVH_API_URL || 'http://localhost:3001'
 const INTEL_FILE = path.join(process.cwd(), 'data', 'intelligence.json')
 
 function readLocalIntelligence() {

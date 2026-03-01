@@ -4,19 +4,23 @@
 
 :root {
   --background: #050505;
-  --surface: #0a0a0b;
+  --surface: #141416;
   --border: #27272a;
+  --accent-primary: #FF4D4D;
+  --accent-secondary: #00D4AA;
+  --accent-tertiary: #3B82F6;
 }
 
 body {
   background-color: var(--background);
   color: #fafafa;
+  font-feature-settings: "ss01", "ss02", "cv01", "cv02";
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -25,11 +29,66 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: #3f3f46;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #52525b;
+}
+
+/* Grid pattern background */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* Glass effect utilities */
+.glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Accent gradients */
+.gradient-accent {
+  background: linear-gradient(135deg, #FF4D4D, #FF6B6B);
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, #10B981, #34D399);
+}
+
+.gradient-warning {
+  background: linear-gradient(135deg, #F59E0B, #FBBF24);
+}
+
+.gradient-info {
+  background: linear-gradient(135deg, #3B82F6, #60A5FA);
+}
+
+/* Selection */
+::selection {
+  background: rgba(255, 77, 77, 0.3);
+  color: white;
+}
+
+/* Typography enhancements */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* Code-like elements */
+.code-block {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: 0.875rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
 }
 
 /* Animations */
@@ -42,24 +101,57 @@ body {
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
 .delay-1000 {
   animation-delay: 1s;
 }
 
-/* Glass effect utilities */
-.glass {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.delay-2000 {
+  animation-delay: 2s;
 }
 
-/* Selection */
-::selection {
-  background: rgba(16, 185, 129, 0.3);
-  color: white;
+/* Custom utilities */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .border-glow {
+    box-shadow: 0 0 20px rgba(255, 77, 77, 0.1);
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@keyframes scroll-ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }

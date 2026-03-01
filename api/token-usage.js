@@ -2,7 +2,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const OVH_API_BASE = process.env.OVH_API_URL || 'http://148.113.174.184:8000'
+const OVH_API_BASE = process.env.OVH_API_URL || 'http://localhost:3001'
 const TOKEN_FILE = path.join(process.cwd(), '..', 'sygnl', 'token_usage_log.json')
 
 function readTokenUsage() {

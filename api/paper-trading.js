@@ -1,5 +1,5 @@
 // Paper Trading API - Proxies to OVH VPS
-const OVH_API_BASE = process.env.OVH_API_URL || 'http://148.113.174.184:8000'
+const OVH_API_BASE = process.env.OVH_API_URL || 'http://localhost:3001'
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')

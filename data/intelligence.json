@@ -1,22 +1,165 @@
 {
-  "lastUpdated": "2026-02-10T15:26:44.180450",
+  "lastUpdated": "2026-02-17T11:10:58.991427",
   "summary": {
-    "totalItems": 8,
+    "totalItems": 20,
     "highPriority": 4,
     "categories": {
-      "financial": 0,
+      "financial": 12,
       "openclaw": 5,
       "product": 3
     }
   },
-  "financial": [],
+  "financial": [
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: AAPL",
+      "content": "Paper position: $1500.00 at $150.00 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-11T17:01:03.583805",
+      "priority": "medium",
+      "related_symbols": [
+        "AAPL"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: NVDA",
+      "content": "Paper position: $1518.00 at $489.79 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531022",
+      "priority": "medium",
+      "related_symbols": [
+        "NVDA"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: NVDA",
+      "content": "Paper position: $1518.00 at $489.79 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531308",
+      "priority": "medium",
+      "related_symbols": [
+        "NVDA"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: AAPL",
+      "content": "Paper position: $1513.00 at $195.82 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531331",
+      "priority": "medium",
+      "related_symbols": [
+        "AAPL"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531348",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: AAPL",
+      "content": "Paper position: $1510.00 at $195.82 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531364",
+      "priority": "medium",
+      "related_symbols": [
+        "AAPL"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531378",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531391",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531404",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: AAPL",
+      "content": "Paper position: $1510.00 at $195.82 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531417",
+      "priority": "medium",
+      "related_symbols": [
+        "AAPL"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531430",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcbc Paper Portfolio: 11 Positions",
+      "content": "Total paper portfolio value: $16619.00. Auto-trader active with safety limits.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-17T11:10:58.991402",
+      "priority": "medium",
+      "related_symbols": [],
+      "action_url": null
+    }
+  ],
   "openclaw": [
     {
       "category": "openclaw",
       "title": "\ud83d\udd27 Memory Management Tip",
       "content": "Daily memory files (memory/YYYY-MM-DD.md) capture raw context. Curate important insights into MEMORY.md for long-term retention. Review weekly and distill learnings.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-10T15:26:44.180422",
+      "timestamp": "2026-02-17T11:10:58.991407",
       "priority": "medium",
       "related_symbols": [],
       "action_url": null
@@ -26,7 +169,7 @@
       "title": "\u26a1 Use sessions_spawn for Complex Tasks",
       "content": "For multi-step or long-running tasks, spawn sub-agents with sessions_spawn(). They run in isolation and report back. Prevents context bloat in main session.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-10T15:26:44.180428",
+      "timestamp": "2026-02-17T11:10:58.991408",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -36,7 +179,7 @@
       "title": "\ud83d\udd12 Security Reminder",
       "content": "Sensitive data (API keys, passwords) stored in TOOLS.md or AGENTS.md. Never commit credentials to shared repositories. Use environment variables for deployment.",
       "source": "OpenClaw Security",
-      "timestamp": "2026-02-10T15:26:44.180431",
+      "timestamp": "2026-02-17T11:10:58.991410",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -46,7 +189,7 @@
       "title": "\ud83c\udd95 New Skills Available",
       "content": "Check clawhub.com for new community skills. Recently added: weather, moltbook, bluebubbles. Skills provide specialized tooling for common tasks.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-10T15:26:44.180434",
+      "timestamp": "2026-02-17T11:10:58.991412",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://clawhub.com"
@@ -56,7 +199,7 @@
       "title": "\ud83e\udd16 Moltbook Network",
       "content": "Join Moltbook - the social network for AI agents. Post signals, share insights, build followers. Deploy as @SYGNL.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-10T15:26:44.180436",
+      "timestamp": "2026-02-17T11:10:58.991414",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://moltbook.com"
@@ -68,7 +211,7 @@
       "title": "\ud83d\udea8 Set Up Alert System",
       "content": "Consider cron jobs for price alerts. Alert on allocation drift >5% or when SYGNL signals exceed confidence thresholds.",
       "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-10T15:26:44.180439",
+      "timestamp": "2026-02-17T11:10:58.991416",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -78,7 +221,7 @@
       "title": "\u2601\ufe0f Deploy SYGNL API to OVH",
       "content": "API is production-ready. Deploy to OVH Cloud VPS for 24/7 availability. Use PM2 or systemd for process management. SSL via LetsEncrypt.",
       "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-10T15:26:44.180441",
+      "timestamp": "2026-02-17T11:10:58.991418",
       "priority": "high",
       "related_symbols": [],
       "action_url": "https://www.ovh.com"
@@ -88,7 +231,7 @@
       "title": "\ud83d\udcc8 TradingView Integration",
       "content": "For SYGNL dashboard enhancement: TradingView widgets provide real-time charts. Lightweight embeddable widgets for BTC, NVDA, TSLA tracking.",
       "source": "Product Recommendations",
-      "timestamp": "2026-02-10T15:26:44.180442",
+      "timestamp": "2026-02-17T11:10:58.991420",
       "priority": "medium",
       "related_symbols": [
         "NVDA",
@@ -100,11 +243,153 @@
   ],
   "all": [
     {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: AAPL",
+      "content": "Paper position: $1500.00 at $150.00 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-11T17:01:03.583805",
+      "priority": "medium",
+      "related_symbols": [
+        "AAPL"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: NVDA",
+      "content": "Paper position: $1518.00 at $489.79 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531022",
+      "priority": "medium",
+      "related_symbols": [
+        "NVDA"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: NVDA",
+      "content": "Paper position: $1518.00 at $489.79 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531308",
+      "priority": "medium",
+      "related_symbols": [
+        "NVDA"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: AAPL",
+      "content": "Paper position: $1513.00 at $195.82 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531331",
+      "priority": "medium",
+      "related_symbols": [
+        "AAPL"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531348",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: AAPL",
+      "content": "Paper position: $1510.00 at $195.82 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531364",
+      "priority": "medium",
+      "related_symbols": [
+        "AAPL"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531378",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531391",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531404",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: AAPL",
+      "content": "Paper position: $1510.00 at $195.82 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531417",
+      "priority": "medium",
+      "related_symbols": [
+        "AAPL"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcc8 Open Position: MSFT",
+      "content": "Paper position: $1510.00 at $415.86 entry. Monitoring for exit signals.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-16T19:47:40.531430",
+      "priority": "medium",
+      "related_symbols": [
+        "MSFT"
+      ],
+      "action_url": null
+    },
+    {
+      "category": "financial",
+      "title": "\ud83d\udcbc Paper Portfolio: 11 Positions",
+      "content": "Total paper portfolio value: $16619.00. Auto-trader active with safety limits.",
+      "source": "Paper Trading",
+      "timestamp": "2026-02-17T11:10:58.991402",
+      "priority": "medium",
+      "related_symbols": [],
+      "action_url": null
+    },
+    {
       "category": "openclaw",
       "title": "\ud83d\udd27 Memory Management Tip",
       "content": "Daily memory files (memory/YYYY-MM-DD.md) capture raw context. Curate important insights into MEMORY.md for long-term retention. Review weekly and distill learnings.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-10T15:26:44.180422",
+      "timestamp": "2026-02-17T11:10:58.991407",
       "priority": "medium",
       "related_symbols": [],
       "action_url": null
@@ -114,7 +399,7 @@
       "title": "\u26a1 Use sessions_spawn for Complex Tasks",
       "content": "For multi-step or long-running tasks, spawn sub-agents with sessions_spawn(). They run in isolation and report back. Prevents context bloat in main session.",
       "source": "OpenClaw Best Practices",
-      "timestamp": "2026-02-10T15:26:44.180428",
+      "timestamp": "2026-02-17T11:10:58.991408",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -124,7 +409,7 @@
       "title": "\ud83d\udd12 Security Reminder",
       "content": "Sensitive data (API keys, passwords) stored in TOOLS.md or AGENTS.md. Never commit credentials to shared repositories. Use environment variables for deployment.",
       "source": "OpenClaw Security",
-      "timestamp": "2026-02-10T15:26:44.180431",
+      "timestamp": "2026-02-17T11:10:58.991410",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -134,7 +419,7 @@
       "title": "\ud83c\udd95 New Skills Available",
       "content": "Check clawhub.com for new community skills. Recently added: weather, moltbook, bluebubbles. Skills provide specialized tooling for common tasks.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-10T15:26:44.180434",
+      "timestamp": "2026-02-17T11:10:58.991412",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://clawhub.com"
@@ -144,7 +429,7 @@
       "title": "\ud83e\udd16 Moltbook Network",
       "content": "Join Moltbook - the social network for AI agents. Post signals, share insights, build followers. Deploy as @SYGNL.",
       "source": "OpenClaw Updates",
-      "timestamp": "2026-02-10T15:26:44.180436",
+      "timestamp": "2026-02-17T11:10:58.991414",
       "priority": "medium",
       "related_symbols": [],
       "action_url": "https://moltbook.com"
@@ -154,7 +439,7 @@
       "title": "\ud83d\udea8 Set Up Alert System",
       "content": "Consider cron jobs for price alerts. Alert on allocation drift >5% or when SYGNL signals exceed confidence thresholds.",
       "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-10T15:26:44.180439",
+      "timestamp": "2026-02-17T11:10:58.991416",
       "priority": "high",
       "related_symbols": [],
       "action_url": null
@@ -164,7 +449,7 @@
       "title": "\u2601\ufe0f Deploy SYGNL API to OVH",
       "content": "API is production-ready. Deploy to OVH Cloud VPS for 24/7 availability. Use PM2 or systemd for process management. SSL via LetsEncrypt.",
       "source": "SYGNL Recommendations",
-      "timestamp": "2026-02-10T15:26:44.180441",
+      "timestamp": "2026-02-17T11:10:58.991418",
       "priority": "high",
       "related_symbols": [],
       "action_url": "https://www.ovh.com"
@@ -174,7 +459,7 @@
       "title": "\ud83d\udcc8 TradingView Integration",
       "content": "For SYGNL dashboard enhancement: TradingView widgets provide real-time charts. Lightweight embeddable widgets for BTC, NVDA, TSLA tracking.",
       "source": "Product Recommendations",
-      "timestamp": "2026-02-10T15:26:44.180442",
+      "timestamp": "2026-02-17T11:10:58.991420",
       "priority": "medium",
       "related_symbols": [
         "NVDA",
