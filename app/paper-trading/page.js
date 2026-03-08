@@ -608,7 +608,7 @@ export default function PaperTradingDashboard() {
     const n = N(value)
     return n > 1 ? n : n * 100
   }
-  const cleanCryptoStrategyName = (name = '') => name.replace(/^(Crypto_|Forex_)/, '').replace(/_/g, ' ').trim()
+  const cleanCryptoStrategyName = (name = '') => name.replace(/^(Crypto_|Forex_|Meme_)/, '').replace(/_/g, ' ').trim()
   const fmtAssetPrice = (value, symbol = '') => {
     const digits = String(symbol).endsWith('=X') ? 4 : 2
     return '$' + N(value).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })
@@ -617,7 +617,7 @@ export default function PaperTradingDashboard() {
   const cryptoStrategies = (Array.isArray(statusData?.strategies) ? statusData.strategies : [])
     .filter((strategy) => {
       const name = strategy.strategy_name || strategy.strategy || strategy.name || ''
-      return name.includes('Crypto_') || name.includes('Forex_')
+      return name.includes('Crypto_') || name.includes('Forex_') || name.includes('Meme_')
     })
     .map((strategy) => {
       const rawName = strategy.strategy_name || strategy.strategy || strategy.name || ''
@@ -1598,8 +1598,11 @@ export default function PaperTradingDashboard() {
           {(() => {
             const CRYPTO_FOREX = new Set(['BTC','ETH','SOL','DOGE','AVAX','MATIC','ADA','DOT','LINK','UNI','AAVE','XRP','BNB','LTC',
               'BITX','MARA','RIOT','COIN','MSTR','BITO','GBTC','ETHE',
+              'PEPE','WIF','BONK','TRUMP','SHIB','FLOKI','MOG','POPCAT','NEIRO','SUI','APT','SEI','ARB','FET','RENDER','TAO','PENDLE','LDO','NEAR','TIA',
               'EUR/USD','GBP/USD','USD/JPY','AUD/USD','USD/CAD','USD/CHF',
               'BTC-USD','ETH-USD','SOL-USD','DOGE-USD','AVAX-USD','MATIC-USD','ADA-USD','DOT-USD','LINK-USD','UNI-USD','AAVE-USD','XRP-USD','BNB-USD','LTC-USD',
+              'PEPE-USD','WIF-USD','BONK-USD','TRUMP-USD','SHIB-USD','FLOKI-USD','SPX6900-USD','MOG-USD','POPCAT-USD','NEIRO-USD',
+              'SUI-USD','APT-USD','SEI-USD','ARB-USD','FET-USD','RENDER-USD','TAO-USD','AAVE-USD','PENDLE-USD','LDO-USD','NEAR-USD','TIA-USD',
               'EURUSD=X','GBPUSD=X','USDJPY=X','AUDUSD=X','USDCAD=X','USDCHF=X','XAUUSD=X'])
             const openExchanges = new Set((globalData?.exchanges || []).filter(ex => ex.is_open || ex.always_open).map(ex => ex.code))
             const usOpen = openExchanges.has('NYSE') || openExchanges.has('NASDAQ')
@@ -2499,8 +2502,11 @@ export default function PaperTradingDashboard() {
                           <div className="text-sm font-semibold text-white truncate">{strategy.displayName || strategy.rawName}</div>
                           <div className="text-[11px] text-zinc-500 truncate">{strategy.strategy_type || 'crypto/forex strategy'}</div>
                         </div>
-                        {strategy.rawName === 'Crypto_Narrative_Momentum' && strategy.tradesCount === 0 && (
+                        {(strategy.rawName === 'Crypto_Narrative_Momentum' || strategy.rawName === 'Meme_Surge') && strategy.tradesCount === 0 && (
                           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-bold animate-pulse">NEW</span>
+                        )}
+                        {strategy.rawName === 'Meme_Surge' && strategy.tradesCount > 0 && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold">🐸 MEME</span>
                         )}
                       </div>
                       <span className="text-sm text-zinc-300 text-right">{strategy.tradesCount}</span>
