@@ -412,6 +412,7 @@ const RankBadge = ({ rank }) => {
 export default function PaperTradingDashboard() {
   const [data, setData] = useState({ accuracy: null, leaderboard: [], positions: [], trades: [], dailyPnl: [], status: null })
   const [intel, setIntel] = useState(null)
+  const [marketIntel, setMarketIntel] = useState(null)
   const [rTotal, setRTotal] = useState(null)
   const [score, setScore] = useState(null)  // consolidated sygnl-score
   const [globalData, setGlobalData] = useState(null)
@@ -497,6 +498,7 @@ export default function PaperTradingDashboard() {
       const paperTradingRes = await fetch('http://localhost:3002/api/paper-trading', { cache: 'no-store' }).catch(() => null)
       const accountRes = await fetch('http://localhost:3002/api/account', { cache: 'no-store' }).catch(() => null)
       const greeksRes = await fetch('http://localhost:3001/api/options-greeks', { cache: 'no-store' }).catch(() => null)
+      const marketIntelRes = await fetch('http://localhost:3002/api/market-intel', { cache: 'no-store' }).catch(() => null)
       
       const rTotal = rTotalRes?.ok ? await rTotalRes.json() : null
       const status = statusRes?.ok ? await statusRes.json() : null
@@ -530,6 +532,8 @@ export default function PaperTradingDashboard() {
       }
       
       setGreeksData(greeksData)
+      const mktIntel = marketIntelRes?.ok ? await marketIntelRes.json() : null
+      if (mktIntel) setMarketIntel(mktIntel)
       setOnline(rTotal && status ? true : false)
       setLastUpdate(new Date())
     } catch (e) {
@@ -608,7 +612,7 @@ export default function PaperTradingDashboard() {
     const n = N(value)
     return n > 1 ? n : n * 100
   }
-  const cleanCryptoStrategyName = (name = '') => name.replace(/^(Crypto_|Forex_|Meme_)/, '').replace(/_/g, ' ').trim()
+  const cleanCryptoStrategyName = (name = '') => name.replace(/^(Crypto_|Forex_|Meme_|Fear_Greed_)/, '').replace(/_/g, ' ').trim()
   const fmtAssetPrice = (value, symbol = '') => {
     const digits = String(symbol).endsWith('=X') ? 4 : 2
     return '$' + N(value).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })
@@ -617,7 +621,7 @@ export default function PaperTradingDashboard() {
   const cryptoStrategies = (Array.isArray(statusData?.strategies) ? statusData.strategies : [])
     .filter((strategy) => {
       const name = strategy.strategy_name || strategy.strategy || strategy.name || ''
-      return name.includes('Crypto_') || name.includes('Forex_') || name.includes('Meme_')
+      return name.includes('Crypto_') || name.includes('Forex_') || name.includes('Meme_') || name.includes('Fear_Greed_')
     })
     .map((strategy) => {
       const rawName = strategy.strategy_name || strategy.strategy || strategy.name || ''
@@ -2476,6 +2480,60 @@ export default function PaperTradingDashboard() {
               </div>
             </div>
           </div>
+
+          {/* Market Intelligence Feed */}
+          {marketIntel && (
+          <div className="mb-5">
+            <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2">Market Intelligence</div>
+            <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
+              {/* Fear & Greed */}
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Fear & Greed</div>
+                <div className={`text-2xl font-black ${
+                  N(marketIntel.fear_greed?.value) < 20 ? 'text-red-400' :
+                  N(marketIntel.fear_greed?.value) < 40 ? 'text-amber-400' :
+                  N(marketIntel.fear_greed?.value) < 60 ? 'text-zinc-300' :
+                  N(marketIntel.fear_greed?.value) < 80 ? 'text-emerald-400' : 'text-emerald-300'
+                }`}>{marketIntel.fear_greed?.value ?? '—'}</div>
+                <div className="text-[10px] text-zinc-500">{marketIntel.fear_greed?.classification} → {marketIntel.fear_greed?.signal}</div>
+              </div>
+              {/* Sentiment */}
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Sentiment</div>
+                <div className={`text-2xl font-black ${
+                  N(marketIntel.sentiment_score) < 30 ? 'text-red-400' :
+                  N(marketIntel.sentiment_score) < 45 ? 'text-amber-400' :
+                  N(marketIntel.sentiment_score) < 55 ? 'text-zinc-300' : 'text-emerald-400'
+                }`}>{N(marketIntel.sentiment_score).toFixed(0)}</div>
+                <div className="text-[10px] text-zinc-500">{marketIntel.sentiment_label}</div>
+              </div>
+              {/* Macro */}
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Macro Regime</div>
+                <div className={`text-lg font-bold ${
+                  marketIntel.macro?.regime === 'RISK_ON' ? 'text-emerald-400' :
+                  marketIntel.macro?.regime === 'CAUTIOUS' ? 'text-amber-400' : 'text-red-400'
+                }`}>{marketIntel.macro?.regime?.replace('_', ' ') || '—'}</div>
+                <div className="text-[10px] text-zinc-500">VIX: {marketIntel.macro?.vix ?? '—'} | Spread: {N(marketIntel.macro?.yield_spread_10y2y).toFixed(2)}</div>
+              </div>
+              {/* Trending */}
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Trending</div>
+                <div className="text-sm font-semibold text-white">{(marketIntel.trending_coins || []).slice(0, 4).join(', ') || '—'}</div>
+                <div className="text-[10px] text-zinc-500">CoinGecko top trending</div>
+              </div>
+              {/* Options P/C */}
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">SPY P/C Ratio</div>
+                <div className={`text-2xl font-black ${
+                  N(marketIntel.options_flow?.SPY?.put_call_ratio) > 1.0 ? 'text-emerald-400' :
+                  N(marketIntel.options_flow?.SPY?.put_call_ratio) > 0.7 ? 'text-zinc-300' : 'text-red-400'
+                }`}>{N(marketIntel.options_flow?.SPY?.put_call_ratio).toFixed(2) || '—'}</div>
+                <div className="text-[10px] text-zinc-500">{marketIntel.options_flow?.SPY?.signal || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+          )}
 
           <div className="mb-5">
             <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2">Strategy Performance</div>
