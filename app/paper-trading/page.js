@@ -67,10 +67,10 @@ const getMarketStatus = (globalData) => {
   
   // Fallback to US market hours if no global markets are open or data is missing
   const now = new Date()
-  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }))
-  const h = et.getHours()
-  const m = et.getMinutes()
-  const day = et.getDay()
+  const localTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  const h = localTime.getHours()
+  const m = localTime.getMinutes()
+  const day = localTime.getDay()
   const mins = h * 60 + m
   if (day === 0 || day === 6) return { open: false, label: 'Markets closed - signals resume at next open' }
   if (mins < 570) return { open: false, label: 'Markets closed - signals resume at next open' } // before 9:30 ET
@@ -357,6 +357,7 @@ const SECTIONS = [
   { id: 'intel', label: 'Intel', icon: '🔮' },
   { id: 'strategies', label: 'Strategies', icon: '🏆' },
   { id: 'daytrading', label: 'Day Trading', icon: '⚔️' },
+  { id: 'crypto', label: 'Crypto', icon: '₿' },
   { id: 'options', label: 'Options', icon: '📊' },
   { id: 'positions', label: 'Positions', icon: '👁️' },
   { id: 'global', label: 'Global', icon: '🌍' },
@@ -441,6 +442,7 @@ export default function PaperTradingDashboard() {
     intel: false,
     strategies: true,
     daytrading: false,
+    crypto: false,
     options: false,
     positions: false,
     global: false,
@@ -600,6 +602,57 @@ export default function PaperTradingDashboard() {
     })
     return Object.entries(byDay).sort((a, b) => a[0].localeCompare(b[0])).map(([date, pnl]) => ({ date, pnl }))
   })()
+
+  const statusData = data.status || {}
+  const normalizeWinRate = (value) => {
+    const n = N(value)
+    return n > 1 ? n : n * 100
+  }
+  const cleanCryptoStrategyName = (name = '') => name.replace(/^(Crypto_|Forex_)/, '').replace(/_/g, ' ').trim()
+  const fmtAssetPrice = (value, symbol = '') => {
+    const digits = String(symbol).endsWith('=X') ? 4 : 2
+    return '$' + N(value).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })
+  }
+
+  const cryptoStrategies = (Array.isArray(statusData?.strategies) ? statusData.strategies : [])
+    .filter((strategy) => {
+      const name = strategy.strategy_name || strategy.strategy || strategy.name || ''
+      return name.includes('Crypto_') || name.includes('Forex_')
+    })
+    .map((strategy) => {
+      const rawName = strategy.strategy_name || strategy.strategy || strategy.name || ''
+      const metrics = strategy.metrics || {}
+      const tradesCount = N(strategy.total_trades ?? metrics.trade_count)
+      const totalPnl = N(strategy.total_pnl ?? strategy.unrealized_pnl)
+      const winRate = normalizeWinRate(metrics.win_rate ?? strategy.win_rate)
+      const avgPnl = N(metrics.avg_pnl ?? metrics.avg_pnl_per_trade ?? strategy.avg_pnl ?? strategy.avg_pnl_per_trade)
+      const capital = N(strategy.starting_capital || strategy.current_cash)
+      const status = String(strategy.status || '').toUpperCase()
+      const isEnabled = strategy.enabled ?? strategy.is_enabled ?? strategy.active ?? (status ? !['DISABLED', 'PAUSED', 'STOPPED'].includes(status) : true)
+      return {
+        ...strategy,
+        rawName,
+        displayName: cleanCryptoStrategyName(rawName),
+        tradesCount,
+        totalPnl,
+        winRate,
+        avgPnl,
+        capital,
+        isEnabled,
+      }
+    })
+
+  const cryptoStrategiesSorted = [...cryptoStrategies].sort((a, b) => b.totalPnl - a.totalPnl)
+  const cryptoPositions = (Array.isArray(pos) ? pos : []).filter((position) => {
+    const symbol = String(position.symbol || '')
+    return symbol.endsWith('-USD') || symbol.endsWith('=X')
+  })
+  const cryptoTotalPnl = cryptoStrategies.reduce((sum, strategy) => sum + strategy.totalPnl, 0)
+  const cryptoWeightedTrades = cryptoStrategies.reduce((sum, strategy) => sum + strategy.tradesCount, 0)
+  const cryptoWinRate = cryptoWeightedTrades > 0
+    ? cryptoStrategies.reduce((sum, strategy) => sum + (strategy.winRate * strategy.tradesCount), 0) / cryptoWeightedTrades
+    : 0
+  const cryptoBestStrategy = cryptoStrategiesSorted[0] || null
 
   return (
     <div className="min-h-screen bg-[#030305] text-white antialiased selection:bg-cyan-500/30">
@@ -2370,6 +2423,165 @@ export default function PaperTradingDashboard() {
         </GlowCard>
 
         </div>{/* end section-daytrading */}
+
+        <CollapsibleSection
+          id="crypto"
+          title="Crypto Dashboard"
+          subtitle={cryptoStrategies.length
+            ? `${cryptoStrategies.length} crypto/forex strategies · ${cryptoPositions.length} live positions`
+            : 'Crypto and forex strategies awaiting signals'}
+          icon={Globe}
+          iconColor="text-cyan-400"
+          iconBg="from-cyan-500/20 via-blue-500/15 to-emerald-500/20 border-cyan-500/20"
+          glow="bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-emerald-500/20"
+          badge={cryptoStrategies.length ? fmt$(cryptoTotalPnl) : 'IDLE'}
+          badgeColor={
+            cryptoStrategies.length
+              ? (cryptoTotalPnl >= 0
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                : 'bg-red-500/15 text-red-400 border-red-500/30')
+              : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+          }
+          isOpen={openSections.crypto}
+          onToggle={toggleSection}
+        >
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Total Crypto P&amp;L</div>
+              <div className={`text-2xl font-bold tracking-tight ${cryptoTotalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {fmt$(cryptoTotalPnl)}
+              </div>
+              <div className="text-[11px] text-zinc-500 mt-1">{cryptoStrategies.length} strategies tracked</div>
+            </div>
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Active Positions</div>
+              <div className="text-2xl font-bold tracking-tight text-white">{cryptoPositions.length}</div>
+              <div className="text-[11px] text-zinc-500 mt-1">Open crypto and FX symbols</div>
+            </div>
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Win Rate</div>
+              <div className={`text-2xl font-bold tracking-tight ${cryptoWinRate >= 50 ? 'text-emerald-400' : cryptoWinRate > 0 ? 'text-amber-400' : 'text-zinc-500'}`}>
+                {cryptoWinRate.toFixed(1)}%
+              </div>
+              <div className="text-[11px] text-zinc-500 mt-1">{cryptoWeightedTrades} weighted trades</div>
+            </div>
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Best Strategy</div>
+              <div className="text-lg font-bold tracking-tight text-white truncate">{cryptoBestStrategy?.displayName || '—'}</div>
+              <div className={`text-[11px] mt-1 ${cryptoBestStrategy ? (cryptoBestStrategy.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-zinc-500'}`}>
+                {cryptoBestStrategy ? fmt$(cryptoBestStrategy.totalPnl) : 'No crypto strategies'}
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-5">
+            <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2">Strategy Performance</div>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-x-auto">
+              <div className="min-w-[760px]">
+                <div className="grid grid-cols-[minmax(0,1.7fr)_4.5rem_5rem_6rem_6rem_7rem_6rem] gap-3 px-4 py-3 border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
+                  <span>Strategy</span>
+                  <span className="text-right">Trades</span>
+                  <span className="text-right">Win Rate</span>
+                  <span className="text-right">P&amp;L</span>
+                  <span className="text-right">Avg P&amp;L</span>
+                  <span className="text-right">Capital</span>
+                  <span className="text-right">Status</span>
+                </div>
+                {cryptoStrategiesSorted.length > 0 ? (
+                  cryptoStrategiesSorted.map((strategy) => (
+                    <div
+                      key={strategy.rawName}
+                      className="grid grid-cols-[minmax(0,1.7fr)_4.5rem_5rem_6rem_6rem_7rem_6rem] gap-3 px-4 py-3 border-b border-white/[0.04] last:border-b-0 hover:bg-white/[0.03] transition-colors"
+                    >
+                      <div className="min-w-0 flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${strategy.isEnabled ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]' : 'bg-red-400 shadow-[0_0_10px_rgba(248,113,113,0.5)]'}`} />
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-white truncate">{strategy.displayName || strategy.rawName}</div>
+                          <div className="text-[11px] text-zinc-500 truncate">{strategy.strategy_type || 'crypto/forex strategy'}</div>
+                        </div>
+                        {strategy.rawName === 'Crypto_Narrative_Momentum' && strategy.tradesCount === 0 && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-bold animate-pulse">NEW</span>
+                        )}
+                      </div>
+                      <span className="text-sm text-zinc-300 text-right">{strategy.tradesCount}</span>
+                      <span className={`text-sm font-semibold text-right ${strategy.winRate >= 50 ? 'text-emerald-400' : strategy.winRate > 0 ? 'text-amber-400' : 'text-zinc-500'}`}>
+                        {strategy.winRate.toFixed(1)}%
+                      </span>
+                      <span className={`text-sm font-bold text-right ${strategy.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {fmt$(strategy.totalPnl)}
+                      </span>
+                      <span className={`text-sm text-right ${strategy.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {fmt$(strategy.avgPnl)}
+                      </span>
+                      <span className="text-sm text-zinc-300 text-right">
+                        ${strategy.capital.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <div className="flex items-center justify-end gap-2">
+                        <span className={`w-2 h-2 rounded-full ${strategy.isEnabled ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                        <span className={`text-[11px] font-medium ${strategy.isEnabled ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {strategy.isEnabled ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-8 text-center">
+                    <Globe className="w-7 h-7 mx-auto mb-2 text-zinc-700" />
+                    <p className="text-sm text-zinc-500">No crypto or forex strategies found</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2">Live Crypto Positions</div>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-x-auto">
+              {cryptoPositions.length > 0 ? (
+                <div className="min-w-[720px]">
+                  <div className="grid grid-cols-[6.5rem_6rem_7rem_7rem_6rem_minmax(0,1fr)_6rem] gap-3 px-4 py-3 border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
+                    <span>Symbol</span>
+                    <span>Direction</span>
+                    <span className="text-right">Entry</span>
+                    <span className="text-right">Current</span>
+                    <span className="text-right">P&amp;L</span>
+                    <span>Strategy</span>
+                    <span className="text-right">Hold Time</span>
+                  </div>
+                  {cryptoPositions.map((position, index) => {
+                    const entryTime = position.entry_time ? new Date(position.entry_time) : null
+                    const holdMinutes = N(position.hold_duration_minutes) || (entryTime && !isNaN(entryTime.getTime()) ? (Date.now() - entryTime.getTime()) / 60000 : 0)
+                    const strategyName = cleanCryptoStrategyName(position.strategy || position.strategy_name || '—')
+                    return (
+                      <div
+                        key={`${position.symbol || 'crypto'}-${index}`}
+                        className="grid grid-cols-[6.5rem_6rem_7rem_7rem_6rem_minmax(0,1fr)_6rem] gap-3 px-4 py-3 border-b border-white/[0.04] last:border-b-0 hover:bg-white/[0.03] transition-colors"
+                      >
+                        <span className="text-sm font-semibold text-white">{position.symbol}</span>
+                        <span className={`text-sm font-semibold ${position.direction === 'SHORT' ? 'text-red-400' : 'text-emerald-400'}`}>
+                          {position.direction === 'SHORT' ? 'SHORT' : 'LONG'}
+                        </span>
+                        <span className="text-sm text-zinc-300 text-right">{fmtAssetPrice(position.entry_price, position.symbol)}</span>
+                        <span className="text-sm text-zinc-300 text-right">{fmtAssetPrice(position.current_price || position.market_price || position.entry_price, position.symbol)}</span>
+                        <span className={`text-sm font-bold text-right ${N(position.unrealized_pnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {fmt$(position.unrealized_pnl)}
+                        </span>
+                        <span className="text-sm text-zinc-400 truncate">{strategyName}</span>
+                        <span className="text-sm text-zinc-400 text-right">{fmtDuration(holdMinutes)}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-zinc-600">
+                  <Radio className="w-7 h-7 mb-2 opacity-40 animate-pulse" />
+                  <p className="text-sm text-zinc-500">No open positions</p>
+                  <p className="text-[11px] text-zinc-600 mt-1">Crypto and forex symbols will appear here when active.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </CollapsibleSection>
 
         <div id="section-options" data-section="options">
         {/* ═══ OPTIONS GREEKS — FOCUS TICKERS ═══ */}
