@@ -661,7 +661,7 @@ export default function PaperTradingDashboard() {
   const cryptoBestStrategy = cryptoStrategiesSorted[0] || null
 
   // ── Oil & Gas / Commodity data ─────────────────────────────────────────
-  const _OIL_GAS_ETF = new Set(['XLE','XOP','OIH','USO','UCO','DBO','BNO','DRLL'])
+  const _OIL_GAS_ETF = new Set(['XLE','XOP','OIH','USO','UCO','DBO','BNO','BOIL','UNG','DRLL'])
   const _OIL_GAS_EQ  = new Set(['XOM','CVX','SHEL','BP','TTE','COP','EOG','DVN','OXY','APA','MRO','CTRA','FANG','LNG','AR','EQT','RRC','MPC','VLO','PSX','DK','SLB','HAL','BKR','NOV','WHD','ET','EPD','WMB','MPLX','PAA'])
   const _AIRLINES    = new Set(['UAL','DAL','AAL','LUV','JBLU','SAVE','JETS'])
   const commodityStrategies = (Array.isArray(statusData?.strategies) ? statusData.strategies : [])
@@ -679,12 +679,14 @@ export default function PaperTradingDashboard() {
     ? commodityStrategies.reduce((sum, s) => sum + ((s.winRate || 0) * (s.tradesCount || 0)), 0) / commodityTrades
     : 0
   const _OIL_WATCH = [
-    { sym: 'USO',  label: 'Crude (USO)',  emoji: '🛢️' },
-    { sym: 'XLE',  label: 'Energy ETF',   emoji: '⚡' },
-    { sym: 'XOP',  label: 'E&P Pure Play',emoji: '⛏️' },
-    { sym: 'XOM',  label: 'ExxonMobil',   emoji: '🏭' },
+    { sym: 'USO',  label: 'Crude (USO)',   emoji: '🛢️' },
+    { sym: 'DBO',  label: 'Oil (DBO)',     emoji: '🛢️' },
+    { sym: 'XLE',  label: 'Energy ETF',    emoji: '⚡' },
+    { sym: 'XOP',  label: 'E&P Pure Play', emoji: '⛏️' },
+    { sym: 'BOIL', label: 'Nat Gas 2x',    emoji: '🔥' },
+    { sym: 'XOM',  label: 'ExxonMobil',    emoji: '🏭' },
     { sym: 'CVX',  label: 'Chevron',       emoji: '🏭' },
-    { sym: 'OXY',  label: 'Occidental',   emoji: '🏭' },
+    { sym: 'OXY',  label: 'Occidental',    emoji: '🏭' },
     { sym: 'UAL',  label: 'United (Short)',emoji: '✈️' },
     { sym: 'DAL',  label: 'Delta (Short)', emoji: '✈️' },
   ]
