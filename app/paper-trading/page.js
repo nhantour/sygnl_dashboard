@@ -358,6 +358,7 @@ const SECTIONS = [
   { id: 'strategies', label: 'Strategies', icon: '🏆' },
   { id: 'daytrading', label: 'Day Trading', icon: '⚔️' },
   { id: 'crypto', label: 'Crypto', icon: '₿' },
+  { id: 'commodity', label: 'Oil & Gas', icon: '🛢️' },
   { id: 'options', label: 'Options', icon: '📊' },
   { id: 'positions', label: 'Positions', icon: '👁️' },
   { id: 'global', label: 'Global', icon: '🌍' },
@@ -444,6 +445,7 @@ export default function PaperTradingDashboard() {
     strategies: true,
     daytrading: false,
     crypto: false,
+    commodity: true,
     options: false,
     positions: false,
     global: false,
@@ -657,6 +659,35 @@ export default function PaperTradingDashboard() {
     ? cryptoStrategies.reduce((sum, strategy) => sum + (strategy.winRate * strategy.tradesCount), 0) / cryptoWeightedTrades
     : 0
   const cryptoBestStrategy = cryptoStrategiesSorted[0] || null
+
+  // ── Oil & Gas / Commodity data ─────────────────────────────────────────
+  const _OIL_GAS_ETF = new Set(['XLE','XOP','OIH','USO','UCO','DBO','BNO','DRLL'])
+  const _OIL_GAS_EQ  = new Set(['XOM','CVX','SHEL','BP','TTE','COP','EOG','DVN','OXY','APA','MRO','CTRA','FANG','LNG','AR','EQT','RRC','MPC','VLO','PSX','DK','SLB','HAL','BKR','NOV','WHD','ET','EPD','WMB','MPLX','PAA'])
+  const _AIRLINES    = new Set(['UAL','DAL','AAL','LUV','JBLU','SAVE','JETS'])
+  const commodityStrategies = (Array.isArray(statusData?.strategies) ? statusData.strategies : [])
+    .filter(s => {
+      const n = (s.name || s.strategy_name || '')
+      return n.includes('Commodity_') || n.includes('Oil_Sector')
+    })
+  const commodityPositions = (Array.isArray(pos) ? pos : []).filter(p => {
+    const sym = (p.symbol || '').toUpperCase()
+    return _OIL_GAS_ETF.has(sym) || _OIL_GAS_EQ.has(sym) || _AIRLINES.has(sym)
+  })
+  const commodityTotalPnl = commodityStrategies.reduce((sum, s) => sum + (s.totalPnl || 0), 0)
+  const commodityTrades = commodityStrategies.reduce((sum, s) => sum + (s.tradesCount || 0), 0)
+  const commodityWR = commodityTrades > 0
+    ? commodityStrategies.reduce((sum, s) => sum + ((s.winRate || 0) * (s.tradesCount || 0)), 0) / commodityTrades
+    : 0
+  const _OIL_WATCH = [
+    { sym: 'USO',  label: 'Crude (USO)',  emoji: '🛢️' },
+    { sym: 'XLE',  label: 'Energy ETF',   emoji: '⚡' },
+    { sym: 'XOP',  label: 'E&P Pure Play',emoji: '⛏️' },
+    { sym: 'XOM',  label: 'ExxonMobil',   emoji: '🏭' },
+    { sym: 'CVX',  label: 'Chevron',       emoji: '🏭' },
+    { sym: 'OXY',  label: 'Occidental',   emoji: '🏭' },
+    { sym: 'UAL',  label: 'United (Short)',emoji: '✈️' },
+    { sym: 'DAL',  label: 'Delta (Short)', emoji: '✈️' },
+  ]
 
   return (
     <div className="min-h-screen bg-[#030305] text-white antialiased selection:bg-cyan-500/30">
@@ -2644,6 +2675,144 @@ export default function PaperTradingDashboard() {
                 </div>
               )}
             </div>
+          </div>
+        </CollapsibleSection>
+
+        {/* ═══ OIL & GAS — COMMODITY SURGE ═══ */}
+        <CollapsibleSection
+          id="commodity"
+          title="Oil & Gas — Commodity Surge"
+          subtitle={commodityStrategies.length
+            ? `${commodityStrategies.length} strategies · ${commodityPositions.length} live positions · ${commodityTrades} trades`
+            : 'Commodity_Surge & Oil_Sector_Rotation · Energy ETFs + Equities + Airline Shorts'}
+          icon={TrendingUp}
+          iconColor="text-amber-400"
+          iconBg="from-amber-500/20 via-orange-500/15 to-red-500/20 border-amber-500/20"
+          glow="bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-red-500/20"
+          badge={commodityStrategies.length ? fmt$(commodityTotalPnl) : 'NEW'}
+          badgeColor={commodityTotalPnl >= 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}
+          isOpen={openSections.commodity}
+          onToggle={toggleSection}
+        >
+          <div className="space-y-4">
+            {/* Strategy overview cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06]">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Total P&L</div>
+                <div className={`text-lg font-bold ${commodityTotalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {fmt$(commodityTotalPnl)}
+                </div>
+              </div>
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06]">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Win Rate</div>
+                <div className={`text-lg font-bold ${commodityWR >= 0.5 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {commodityTrades > 0 ? `${(commodityWR * 100).toFixed(0)}%` : '—'}
+                </div>
+              </div>
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06]">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Trades</div>
+                <div className="text-lg font-bold text-white">{commodityTrades || 0}</div>
+              </div>
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06]">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Open Positions</div>
+                <div className="text-lg font-bold text-white">{commodityPositions.length}</div>
+              </div>
+            </div>
+
+            {/* Regime context */}
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-amber-400 text-sm font-bold">🛢️ Oil Surge Context</span>
+                <span className="text-[10px] text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full">US-Iran escalation active</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-xs text-zinc-400">
+                <div>
+                  <span className="text-emerald-400 font-medium">LONG: </span>
+                  XLE, XOP, USO, XOM, CVX, OXY, COP — energy breakout
+                </div>
+                <div>
+                  <span className="text-red-400 font-medium">SHORT: </span>
+                  UAL, DAL, AAL — airline inverse (fuel cost squeeze)
+                </div>
+              </div>
+            </div>
+
+            {/* Watchlist */}
+            <div>
+              <div className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider mb-2">Watchlist — Key Oil Symbols</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {_OIL_WATCH.map(({ sym, label, emoji }) => {
+                  const livePos = commodityPositions.find(p => (p.symbol || '').toUpperCase() === sym)
+                  const isAirline = _AIRLINES.has(sym)
+                  return (
+                    <div key={sym} className={`bg-white/[0.03] border rounded-lg p-2.5 ${livePos ? 'border-amber-500/40 bg-amber-500/5' : 'border-white/[0.06]'}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] text-zinc-500">{emoji}</span>
+                        {livePos && (
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${livePos.direction === 'LONG' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {livePos.direction}
+                          </span>
+                        )}
+                        {!livePos && isAirline && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-red-500/10 text-red-500">SHORT target</span>
+                        )}
+                      </div>
+                      <div className="text-xs font-bold text-white">{sym}</div>
+                      <div className="text-[10px] text-zinc-500">{label}</div>
+                      {livePos && (
+                        <div className={`text-[10px] font-medium mt-1 ${(livePos.unrealized_pnl || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {fmt$((livePos.unrealized_pnl || 0))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Active positions from commodity strategies */}
+            {commodityPositions.length > 0 && (
+              <div>
+                <div className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider mb-2">Live Positions</div>
+                <div className="space-y-2">
+                  {commodityPositions.map((p, i) => (
+                    <div key={i} className="flex items-center justify-between bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-3">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${p.direction === 'LONG' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                          {p.direction}
+                        </span>
+                        <span className="text-sm font-medium">{p.symbol}</span>
+                        <span className="text-[10px] text-zinc-500">qty {Number(p.quantity || 0).toFixed(2)}</span>
+                      </div>
+                      <div className={`text-sm font-bold ${(p.unrealized_pnl || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {fmt$((p.unrealized_pnl || 0))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Strategy status */}
+            {commodityStrategies.length > 0 ? (
+              <div className="space-y-2">
+                {commodityStrategies.map((s, i) => (
+                  <div key={i} className="flex items-center justify-between bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5">
+                    <div>
+                      <div className="text-sm font-medium">{(s.name || s.strategy_name || '').replace(/_/g, ' ')}</div>
+                      <div className="text-[10px] text-zinc-500">{s.tradesCount || 0} trades · {((s.winRate || 0) * 100).toFixed(0)}% WR</div>
+                    </div>
+                    <div className={`text-sm font-bold ${(s.totalPnl || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {fmt$(s.totalPnl || 0)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-zinc-600 text-sm">
+                🛢️ Commodity strategies registered — awaiting Monday open signals
+              </div>
+            )}
           </div>
         </CollapsibleSection>
 
