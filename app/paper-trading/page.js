@@ -359,6 +359,9 @@ const SECTIONS = [
   { id: 'daytrading', label: 'Day Trading', icon: '⚔️' },
   { id: 'crypto', label: 'Crypto', icon: '₿' },
   { id: 'commodity', label: 'Oil & Gas', icon: '🛢️' },
+  { id: 'defense', label: 'Defense', icon: '🛡️' },
+  { id: 'gold', label: 'Gold', icon: '🥇' },
+  { id: 'semis', label: 'Semis', icon: '🔬' },
   { id: 'options', label: 'Options', icon: '📊' },
   { id: 'positions', label: 'Positions', icon: '👁️' },
   { id: 'global', label: 'Global', icon: '🌍' },
@@ -446,6 +449,9 @@ export default function PaperTradingDashboard() {
     daytrading: false,
     crypto: false,
     commodity: true,
+    defense: true,
+    gold: true,
+    semis: true,
     options: false,
     positions: false,
     global: false,
@@ -689,6 +695,66 @@ export default function PaperTradingDashboard() {
     { sym: 'OXY',  label: 'Occidental',    emoji: '🏭' },
     { sym: 'UAL',  label: 'United (Short)',emoji: '✈️' },
     { sym: 'DAL',  label: 'Delta (Short)', emoji: '✈️' },
+  ]
+
+  // ── Defense data ──────────────────────────────────────────────────────
+  const defenseStrategies = (Array.isArray(statusData?.strategies) ? statusData.strategies : [])
+    .filter(s => (s.name || s.strategy_name || '').includes('Defense_'))
+  const _DEF_SYMS = new Set(['ITA','XAR','DFEN','LMT','RTX','NOC','GD','BA','HII','AXON','LDOS','SAIC','BAH','CACI','TDG','MOOG'])
+  const defensePositions = (Array.isArray(pos) ? pos : []).filter(p => _DEF_SYMS.has((p.symbol||'').toUpperCase()))
+  const defensePnl = defenseStrategies.reduce((s, x) => s + (x.totalPnl||0), 0)
+  const defenseTrades = defenseStrategies.reduce((s, x) => s + (x.tradesCount||0), 0)
+  const defenseWR = defenseTrades > 0
+    ? defenseStrategies.reduce((s, x) => s + ((x.winRate||0)*(x.tradesCount||0)), 0) / defenseTrades : 0
+  const _DEF_WATCH = [
+    {sym:'ITA', label:'Defense ETF', emoji:'🛡️'},
+    {sym:'LMT', label:'Lockheed', emoji:'🚀'},
+    {sym:'RTX', label:'Raytheon', emoji:'💥'},
+    {sym:'NOC', label:'Northrop', emoji:'✈️'},
+    {sym:'GD',  label:'Gen Dynamics', emoji:'⚓'},
+    {sym:'AXON',label:'Axon', emoji:'⚡'},
+    {sym:'DFEN',label:'Defense 3x', emoji:'🔺'},
+    {sym:'BA',  label:'Boeing Def', emoji:'🛩️'},
+  ]
+
+  // ── Gold data ──────────────────────────────────────────────────────────
+  const goldStrategies = (Array.isArray(statusData?.strategies) ? statusData.strategies : [])
+    .filter(s => (s.name || s.strategy_name || '').includes('Gold_'))
+  const _GOLD_SYMS = new Set(['GLD','IAU','SGOL','GDX','GDXJ','UGL','SLV','SIVR','NEM','GOLD','AEM','WPM','FNV','RGLD','KGC','AU','AGI','EGO'])
+  const goldPositions = (Array.isArray(pos) ? pos : []).filter(p => _GOLD_SYMS.has((p.symbol||'').toUpperCase()))
+  const goldPnl = goldStrategies.reduce((s, x) => s + (x.totalPnl||0), 0)
+  const goldTrades = goldStrategies.reduce((s, x) => s + (x.tradesCount||0), 0)
+  const goldWR = goldTrades > 0
+    ? goldStrategies.reduce((s, x) => s + ((x.winRate||0)*(x.tradesCount||0)), 0) / goldTrades : 0
+  const _GOLD_WATCH = [
+    {sym:'GLD', label:'Gold ETF', emoji:'🥇'},
+    {sym:'GDX', label:'Gold Miners', emoji:'⛏️'},
+    {sym:'GDXJ',label:'Jr Miners', emoji:'⛏️'},
+    {sym:'NEM', label:'Newmont', emoji:'🏭'},
+    {sym:'WPM', label:'Wheaton', emoji:'💎'},
+    {sym:'UGL', label:'Gold 2x', emoji:'🔺'},
+    {sym:'SLV', label:'Silver ETF', emoji:'🥈'},
+    {sym:'FNV', label:'Franco-Nev', emoji:'💎'},
+  ]
+
+  // ── Semis data ────────────────────────────────────────────────────────
+  const semisStrategies = (Array.isArray(statusData?.strategies) ? statusData.strategies : [])
+    .filter(s => (s.name || s.strategy_name || '').includes('Semis_'))
+  const _SEMI_SYMS = new Set(['SOXX','SMH','SOXL','USD','NVDA','AMD','AVGO','MRVL','ARM','MU','TSM','INTC','ASML','TXN','ADI','NXPI','ON','AMAT','LRCX','KLAC','ENTG'])
+  const semisPositions = (Array.isArray(pos) ? pos : []).filter(p => _SEMI_SYMS.has((p.symbol||'').toUpperCase()))
+  const semisPnl = semisStrategies.reduce((s, x) => s + (x.totalPnl||0), 0)
+  const semisTrades = semisStrategies.reduce((s, x) => s + (x.tradesCount||0), 0)
+  const semisWR = semisTrades > 0
+    ? semisStrategies.reduce((s, x) => s + ((x.winRate||0)*(x.tradesCount||0)), 0) / semisTrades : 0
+  const _SEMI_WATCH = [
+    {sym:'NVDA', label:'Nvidia', emoji:'🤖'},
+    {sym:'AMD',  label:'AMD', emoji:'🔴'},
+    {sym:'SOXX', label:'Semis ETF', emoji:'🔬'},
+    {sym:'SOXL', label:'Semis 3x', emoji:'🔺'},
+    {sym:'AVGO', label:'Broadcom', emoji:'📡'},
+    {sym:'MU',   label:'Micron', emoji:'💾'},
+    {sym:'TSM',  label:'TSMC', emoji:'🏭'},
+    {sym:'ASML', label:'ASML', emoji:'🔭'},
   ]
 
   return (
@@ -2817,6 +2883,112 @@ export default function PaperTradingDashboard() {
             )}
           </div>
         </CollapsibleSection>
+
+        {/* ═══ DEFENSE & AEROSPACE ═══ */}
+        {(() => {
+          const SurgePanel = ({ id, title, subtitle, iconEmoji, accentFrom, accentTo, accentBorder, accentText, pnl, wr, trades, positions, watch, strategies: strats, watchSymSet, isOpen, onToggle, contextNote, longLabel, shortLabel }) => (
+            <CollapsibleSection
+              id={id} title={title} subtitle={subtitle}
+              icon={TrendingUp} iconColor={accentText}
+              iconBg={`from-${accentFrom}/20 via-${accentTo}/15 to-${accentFrom}/20 border-${accentBorder}/20`}
+              glow={`bg-gradient-to-r from-${accentFrom}/20 via-${accentTo}/10 to-${accentFrom}/20`}
+              badge={strats.length ? fmt$(pnl) : 'NEW'}
+              badgeColor={pnl >= 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}
+              isOpen={isOpen} onToggle={onToggle}
+            >
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[['Total P&L', fmt$(pnl), pnl >= 0 ? 'text-emerald-400' : 'text-red-400'],
+                    ['Win Rate', trades > 0 ? `${(wr*100).toFixed(0)}%` : '—', wr >= 0.5 ? 'text-emerald-400' : 'text-red-400'],
+                    ['Trades', String(trades), 'text-white'],
+                    ['Open', String(positions.length), 'text-white']
+                  ].map(([label, val, cls]) => (
+                    <div key={label} className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06]">
+                      <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">{label}</div>
+                      <div className={`text-lg font-bold ${cls}`}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className={`bg-${accentFrom}/5 border border-${accentBorder}/20 rounded-xl p-4`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`${accentText} text-sm font-bold`}>{contextNote.icon} {contextNote.title}</span>
+                    <span className="text-[10px] text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full">{contextNote.tag}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs text-zinc-400">
+                    <div><span className="text-emerald-400 font-medium">LONG: </span>{longLabel}</div>
+                    {shortLabel && <div><span className="text-red-400 font-medium">SHORT: </span>{shortLabel}</div>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {watch.map(({ sym, label, emoji }) => {
+                    const lp = positions.find(p => (p.symbol||'').toUpperCase() === sym)
+                    return (
+                      <div key={sym} className={`bg-white/[0.03] border rounded-lg p-2.5 ${lp ? `border-${accentBorder}/40 bg-${accentFrom}/5` : 'border-white/[0.06]'}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] text-zinc-500">{emoji}</span>
+                          {lp && <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${lp.direction==='LONG' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>{lp.direction}</span>}
+                        </div>
+                        <div className="text-xs font-bold text-white">{sym}</div>
+                        <div className="text-[10px] text-zinc-500">{label}</div>
+                        {lp && <div className={`text-[10px] font-medium mt-1 ${(lp.unrealized_pnl||0)>=0?'text-emerald-400':'text-red-400'}`}>{fmt$(lp.unrealized_pnl||0)}</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+                {strats.length === 0 && (
+                  <div className="text-center py-6 text-zinc-600 text-sm">{contextNote.icon} Strategy registered — awaiting Monday open signals</div>
+                )}
+                {positions.length > 0 && (
+                  <div className="space-y-2">
+                    {positions.map((p, i) => (
+                      <div key={i} className="flex items-center justify-between bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${p.direction==='LONG'?'bg-emerald-500/20 text-emerald-400':'bg-red-500/20 text-red-400'}`}>{p.direction}</span>
+                          <span className="text-sm font-medium">{p.symbol}</span>
+                        </div>
+                        <div className={`text-sm font-bold ${(p.unrealized_pnl||0)>=0?'text-emerald-400':'text-red-400'}`}>{fmt$(p.unrealized_pnl||0)}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CollapsibleSection>
+          )
+          return (
+            <>
+              <SurgePanel
+                id="defense" title="Defense & Aerospace" isOpen={openSections.defense} onToggle={toggleSection}
+                subtitle={defenseStrategies.length ? `${defenseStrategies.length} strategies · ${defensePositions.length} live positions` : 'Defense_Surge · ITA, LMT, RTX, NOC, GD, AXON'}
+                iconEmoji="🛡️" accentFrom="sky" accentTo="blue" accentBorder="sky" accentText="text-sky-400"
+                pnl={defensePnl} wr={defenseWR} trades={defenseTrades} positions={defensePositions}
+                watch={_DEF_WATCH} strategies={defenseStrategies}
+                contextNote={{ icon: '🛡️', title: 'War Escalation Context', tag: 'US-Iran + NATO active', }}
+                longLabel="ITA, LMT, RTX, NOC, GD — direct defense spend beneficiaries"
+                shortLabel={null}
+              />
+              <SurgePanel
+                id="gold" title="Gold & Precious Metals" isOpen={openSections.gold} onToggle={toggleSection}
+                subtitle={goldStrategies.length ? `${goldStrategies.length} strategies · ${goldPositions.length} live positions` : 'Gold_Surge · GLD, GDX, NEM, WPM, SLV'}
+                iconEmoji="🥇" accentFrom="yellow" accentTo="amber" accentBorder="yellow" accentText="text-yellow-400"
+                pnl={goldPnl} wr={goldWR} trades={goldTrades} positions={goldPositions}
+                watch={_GOLD_WATCH} strategies={goldStrategies}
+                contextNote={{ icon: '🥇', title: 'Inflation & Fear Hedge', tag: 'Oil spike + geo fear = gold surge', }}
+                longLabel="GLD, GDX, GDXJ, NEM, WPM — gold spot + miners (2-3x leverage to price)"
+                shortLabel={null}
+              />
+              <SurgePanel
+                id="semis" title="Semiconductors" isOpen={openSections.semis} onToggle={toggleSection}
+                subtitle={semisStrategies.length ? `${semisStrategies.length} strategies · ${semisPositions.length} live positions` : 'Semis_Momentum · NVDA, AMD, SOXX, SOXL, TSM'}
+                iconEmoji="🔬" accentFrom="violet" accentTo="purple" accentBorder="violet" accentText="text-violet-400"
+                pnl={semisPnl} wr={semisWR} trades={semisTrades} positions={semisPositions}
+                watch={_SEMI_WATCH} strategies={semisStrategies}
+                contextNote={{ icon: '🔬', title: 'AI & Chips Momentum', tag: 'Earnings, AI news, export bans', }}
+                longLabel="NVDA, AMD, SOXX, SOXL — AI/data center momentum, earnings beats"
+                shortLabel="SOXX, SMH — breakdown on export bans, earnings misses, macro shock"
+              />
+            </>
+          )
+        })()}
 
         <div id="section-options" data-section="options">
         {/* ═══ OPTIONS GREEKS — FOCUS TICKERS ═══ */}
