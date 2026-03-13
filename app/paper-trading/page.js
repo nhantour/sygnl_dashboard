@@ -2586,7 +2586,7 @@ export default function PaperTradingDashboard() {
             <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2">Market Intelligence</div>
             <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
               {/* Fear & Greed */}
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col">
                 <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Fear & Greed</div>
                 <div className={`text-2xl font-black ${
                   N(marketIntel.fear_greed?.value) < 20 ? 'text-red-400' :
@@ -2594,41 +2594,41 @@ export default function PaperTradingDashboard() {
                   N(marketIntel.fear_greed?.value) < 60 ? 'text-zinc-300' :
                   N(marketIntel.fear_greed?.value) < 80 ? 'text-emerald-400' : 'text-emerald-300'
                 }`}>{marketIntel.fear_greed?.value ?? '—'}</div>
-                <div className="text-[10px] text-zinc-500">{marketIntel.fear_greed?.classification} → {marketIntel.fear_greed?.signal}</div>
+                <div className="text-[10px] text-zinc-500 mt-auto">{marketIntel.fear_greed?.classification} → {marketIntel.fear_greed?.signal}</div>
               </div>
               {/* Sentiment */}
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col">
                 <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Sentiment</div>
                 <div className={`text-2xl font-black ${
                   N(marketIntel.sentiment_score) < 30 ? 'text-red-400' :
                   N(marketIntel.sentiment_score) < 45 ? 'text-amber-400' :
                   N(marketIntel.sentiment_score) < 55 ? 'text-zinc-300' : 'text-emerald-400'
                 }`}>{N(marketIntel.sentiment_score).toFixed(0)}</div>
-                <div className="text-[10px] text-zinc-500">{marketIntel.sentiment_label}</div>
+                <div className="text-[10px] text-zinc-500 mt-auto">{marketIntel.sentiment_label}</div>
               </div>
-              {/* Macro */}
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Macro Regime</div>
+              {/* Macro / Market Regime */}
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Market Regime</div>
                 <div className={`text-lg font-bold ${
                   marketIntel.macro?.regime === 'RISK_ON' ? 'text-emerald-400' :
                   marketIntel.macro?.regime === 'CAUTIOUS' ? 'text-amber-400' : 'text-red-400'
                 }`}>{marketIntel.macro?.regime?.replace('_', ' ') || '—'}</div>
-                <div className="text-[10px] text-zinc-500">VIX: {marketIntel.macro?.vix ?? '—'} | Spread: {N(marketIntel.macro?.yield_spread_10y2y).toFixed(2)}</div>
+                <div className="text-[10px] text-zinc-500 mt-auto">VIX: {marketIntel.macro?.vix ?? '—'} | Spread: {N(marketIntel.macro?.yield_spread_10y2y).toFixed(2)}</div>
               </div>
               {/* Trending */}
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col">
                 <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Trending</div>
                 <div className="text-sm font-semibold text-white">{(marketIntel.trending_coins || []).slice(0, 4).join(', ') || '—'}</div>
-                <div className="text-[10px] text-zinc-500">CoinGecko top trending</div>
+                <div className="text-[10px] text-zinc-500 mt-auto">CoinGecko top trending</div>
               </div>
               {/* Options P/C */}
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col">
                 <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">SPY P/C Ratio</div>
                 <div className={`text-2xl font-black ${
                   N(marketIntel.options_flow?.SPY?.put_call_ratio) > 1.0 ? 'text-emerald-400' :
                   N(marketIntel.options_flow?.SPY?.put_call_ratio) > 0.7 ? 'text-zinc-300' : 'text-red-400'
                 }`}>{N(marketIntel.options_flow?.SPY?.put_call_ratio).toFixed(2) || '—'}</div>
-                <div className="text-[10px] text-zinc-500">{marketIntel.options_flow?.SPY?.signal || 'N/A'}</div>
+                <div className="text-[10px] text-zinc-500 mt-auto">{marketIntel.options_flow?.SPY?.signal || 'N/A'}</div>
               </div>
             </div>
           </div>

@@ -5,7 +5,7 @@
 const N = (v) => Number(v) || 0
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, Activity, DollarSign, Target, Wallet, LogOut, RefreshCw, Zap, PieChart, AlertTriangle, CheckCircle, TrendingUp as TrendingUpIcon, Newspaper, Plus, Minus, X, ChevronDown, ChevronUp, Brain, BarChart3 } from 'lucide-react'
+import { TrendingUp, Activity, DollarSign, Target, Wallet, LogOut, RefreshCw, Zap, PieChart, AlertTriangle, CheckCircle, TrendingUp as TrendingUpIcon, Newspaper, Plus, Minus, X, ChevronDown, ChevronUp, Brain, BarChart3, FileText, Download } from 'lucide-react'
 
 const VPS_API_BASE = 'http://localhost:3001'   // Mac Mini (migrated from OVH VPS)
 const RLM_API_BASE = 'http://localhost:3002'   // Paper engine (local)
@@ -70,6 +70,10 @@ export default function Dashboard() {
   const [feedEvents, setFeedEvents] = useState([])
   const [feedFilter, setFeedFilter] = useState('all')
   const [feedLastFetch, setFeedLastFetch] = useState(null)
+
+  // Reports dropdown state
+  const [showReportsDropdown, setShowReportsDropdown] = useState(false)
+  const [dailyReports, setDailyReports] = useState([])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -273,6 +277,59 @@ export default function Dashboard() {
     return () => clearInterval(chiefInterval)
   }, [])
 
+  // Daily Reports fetch
+  useEffect(() => {
+    async function fetchDailyReports() {
+      try {
+        // Try to fetch from the API endpoint for daily reports
+        const res = await fetch(`${VPS_API_BASE}/api/daily-reports`).catch(() => null)
+        if (res?.ok) {
+          const data = await res.json()
+          setDailyReports(data.reports || [])
+        } else {
+          // Fallback: generate from local data files
+          const reports = []
+          const today = new Date()
+          
+          // Generate last 7 days of report placeholders
+          for (let i = 0; i < 7; i++) {
+            const date = new Date(today)
+            date.setDate(date.getDate() - i)
+            const dateStr = date.toISOString().split('T')[0]
+            const dateCompact = dateStr.replace(/-/g, '')
+            
+            reports.push({
+              date: dateStr,
+              label: i === 0 ? 'Today' : i === 1 ? 'Yesterday' : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+              url: `/data/chief_daily_report_${dateCompact}.json`,
+              available: i === 0 // Only mark today as available for now
+            })
+          }
+          setDailyReports(reports)
+        }
+      } catch (e) { console.error('Daily reports fetch error:', e) }
+    }
+    fetchDailyReports()
+  }, [])
+
+  // Click outside handler for dropdowns
+  useEffect(() => {
+    function handleClickOutside(e) {
+      const alertsDropdown = document.getElementById('alerts-dropdown')
+      const reportsDropdown = document.getElementById('reports-dropdown')
+      
+      if (alertsDropdown && !alertsDropdown.contains(e.target)) {
+        setShowAlertsDropdown(false)
+      }
+      if (reportsDropdown && !reportsDropdown.contains(e.target)) {
+        setShowReportsDropdown(false)
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   // Auto-execute strong signals (only when signal carries a real price)
   useEffect(() => {
     if (!autoExecuteEnabled || sygnliqSignals.length === 0) return
@@ -397,7 +454,7 @@ export default function Dashboard() {
             <img src="/logo.png" alt="SYGNL" className="h-24 w-auto object-contain" />
           </div>
           <div className="flex items-center gap-4">
-            <div className="relative">
+            <div id="alerts-dropdown" className="relative">
               <button onClick={() => setShowAlertsDropdown(!showAlertsDropdown)} className="flex items-center gap-3 px-4 py-2 rounded-xl bg-black/40 border border-white/10 hover:bg-black/60 transition-colors">
                 <AlertTriangle className={alerts.length > 0 ? 'w-4 h-4 text-red-400 animate-pulse' : 'w-4 h-4 text-zinc-500'} />
                 <span className="text-sm font-medium text-zinc-300">Alerts</span>
@@ -435,6 +492,67 @@ export default function Dashboard() {
             <a href="/options" className="px-3 py-2 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 text-sm font-medium border border-violet-500/20">Options →</a>
             <a href="/mission-control" className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-sm font-medium border border-rose-500/20">Mission Control →</a>
             <a href="/v2" className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-sm font-medium border border-amber-500/20">⚡ v2 →</a>
+            
+            {/* Reports Dropdown */}
+            <div id="reports-dropdown" className="relative">
+              <button 
+                onClick={() => setShowReportsDropdown(!showReportsDropdown)} 
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-sm font-medium border border-blue-500/20 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Reports</span>
+                <ChevronDown className={'w-4 h-4 transition-transform ' + (showReportsDropdown ? 'rotate-180' : '')} />
+              </button>
+              {showReportsDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-72 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-3 border-b border-white/5 flex items-center justify-between">
+                    <span className="text-sm font-medium text-zinc-300">Daily Reports</span>
+                    <span className="text-xs text-zinc-500">{dailyReports.filter(r => r.available).length} available</span>
+                  </div>
+                  {dailyReports.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-zinc-500">No reports available</div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto">
+                      {dailyReports.map((report, idx) => (
+                        <div 
+                          key={idx} 
+                          className="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors flex items-center justify-between group"
+                          onClick={() => {
+                            if (report.available) {
+                              window.open(report.url, '_blank')
+                            }
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (report.available ? 'bg-blue-500/20 text-blue-400' : 'bg-zinc-800 text-zinc-600')}>
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className={'text-sm font-medium ' + (report.available ? 'text-zinc-200' : 'text-zinc-500')}>{report.label}</div>
+                              <div className="text-xs text-zinc-600">{report.date}</div>
+                            </div>
+                          </div>
+                          {report.available ? (
+                            <Download className="w-4 h-4 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          ) : (
+                            <span className="text-xs text-zinc-600">Pending</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="p-2 border-t border-white/5 bg-black/20">
+                    <button 
+                      onClick={() => window.open('/api/daily-reports/all', '_blank')}
+                      className="w-full py-2 text-xs text-center text-zinc-400 hover:text-zinc-200 transition-colors"
+                    >
+                      View All Reports →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
             <a href="/" className="p-2 rounded-xl bg-white/5 hover:bg-red-500/10"><LogOut className="w-5 h-5 text-zinc-400" /></a>
           </div>
         </div>
